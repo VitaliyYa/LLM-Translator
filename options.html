@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LLM Translator Settings</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin: 10px 0 5px; }
+    input[type="text"], input[type="url"] { width: 100%; padding: 5px; box-sizing: border-box; }
+    button { margin-top: 15px; padding: 10px 15px; }
+    .status { margin-top: 10px; color: green; }
+    .error { margin-top: 10px; color: red; }
+  </style>
+</head>
+<body>
+  <h1>LLM Translator Settings</h1>
+  <form id="settings-form">
+    <label for="baseLanguage">Base Translation Language:</label>
+    <input type="text" id="baseLanguage" name="baseLanguage" placeholder="For example, RUSSIAN" required>
+    
+    <label for="apiUrl">LLM API URL:</label>
+    <input type="url" id="apiUrl" name="apiUrl" placeholder="For example, http://localhost:8000/api" required>
+    
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" name="apiKey" placeholder="Your API Key" required>
+    
+    <button type="submit">Save Settings</button>
+  </form>
+  <div id="message"></div>
+  
+  <script src="options.js"></script>
+</body>
+</html>

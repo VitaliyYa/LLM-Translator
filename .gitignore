@@ -1,0 +1,21 @@
+# Firefox build folder
+firefox_build/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+*.swp
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node modules if you add them later
+node_modules/
