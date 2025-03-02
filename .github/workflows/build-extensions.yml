@@ -1,0 +1,54 @@
+name: Build Browser Extensions
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Create build directory
+        run: mkdir -p build
+      
+      # Build Chrome Extension
+      - name: Create Chrome Extension package
+        run: |
+          mkdir -p build/chrome
+          cp background.js content.js options.html options.js manifest.json build/chrome/
+          cp -r icons build/chrome/
+          cd build/chrome
+          zip -r ../chrome-extension.zip *
+      
+      # Build Firefox Extension
+      - name: Create Firefox Extension package
+        run: |
+          mkdir -p build/firefox
+          cp background.js content.js options.html options.js build/firefox/
+          cp -r icons build/firefox/
+          cp manifest.firefox.json build/firefox/manifest.json
+          cd build/firefox
+          zip -r ../firefox-extension.zip *
+      
+      # Upload artifacts
+      - name: Upload Chrome Extension
+        uses: actions/upload-artifact@v3
+        with:
+          name: chrome-extension
+          path: build/chrome-extension.zip
+      
+      - name: Upload Firefox Extension
+        uses: actions/upload-artifact@v3
+        with:
+          name: firefox-extension
+          path: build/firefox-extension.zip
