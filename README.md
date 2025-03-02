@@ -1,4 +1,3 @@
-// filepath: c:\Users\Vit\Projects\LLM-Translator\README.md
 # LLM Translator Browser Extension
 
 Browser extension that translates selected text using LLM APIs (supports Chrome and Firefox).
