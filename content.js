@@ -82,8 +82,7 @@ function showTranslationPopup(response) {
   translationPopup = document.createElement('div');
   translationPopup.id = 'translation-popup';
   translationPopup.style.position = 'absolute';
-  translationPopup.style.top = (translatorIcon.offsetTop + 30) + 'px';
-  translationPopup.style.left = translatorIcon.offsetLeft + 'px';
+  // Initial styling (padding, background, border, etc. affect size)
   translationPopup.style.padding = '12px';
   translationPopup.style.backgroundColor = '#ffffff';
   translationPopup.style.border = '1px solid #cccccc';
@@ -110,8 +109,59 @@ function showTranslationPopup(response) {
     translationPopup.style.color = '#cc0000';
   }
   
+  // Temporarily add to DOM to measure, initially hidden and off-screen
+  translationPopup.style.visibility = 'hidden';
+  translationPopup.style.top = '-9999px'; 
+  translationPopup.style.left = '-9999px';
   document.body.appendChild(translationPopup);
-  console.log('LLM-Translator: Popup added to DOM');
+  
+  const popupWidth = translationPopup.offsetWidth;
+  const popupHeight = translationPopup.offsetHeight;
+  
+  console.log(`LLM-Translator: Popup measured - Width: ${popupWidth}, Height: ${popupHeight}`);
+
+  // Calculate initial desired position (e.g., below the icon)
+  let desiredTop = translatorIcon.offsetTop + translatorIcon.offsetHeight + 2; // 2px below the icon
+  let desiredLeft = translatorIcon.offsetLeft;
+
+  // Viewport and scroll data
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  const buffer = 10; // 10px buffer from viewport edges
+
+  // Adjust left position
+  if (desiredLeft + popupWidth > scrollX + viewportWidth - buffer) {
+    desiredLeft = scrollX + viewportWidth - popupWidth - buffer;
+  }
+  if (desiredLeft < scrollX + buffer) {
+    desiredLeft = scrollX + buffer;
+  }
+
+  // Adjust top position
+  if (desiredTop + popupHeight > scrollY + viewportHeight - buffer) { // If overflows bottom
+    let topAboveIcon = translatorIcon.offsetTop - popupHeight - 2; // Try 2px above the icon
+    // Check if placing above icon makes it go off the top of viewport or is worse than clamping to bottom
+    if (topAboveIcon < scrollY + buffer) { 
+        // If it doesn't fit above (goes off top), clamp to bottom of viewport
+        desiredTop = scrollY + viewportHeight - popupHeight - buffer;
+    } else {
+        // It fits above the icon
+        desiredTop = topAboveIcon;
+    }
+  }
+  // Final check for top boundary, in case it was positioned above and was too tall or initial position was too high
+  if (desiredTop < scrollY + buffer) {
+    desiredTop = scrollY + buffer;
+  }
+
+  // Apply final positions
+  translationPopup.style.top = desiredTop + 'px';
+  translationPopup.style.left = desiredLeft + 'px';
+  translationPopup.style.visibility = 'visible'; // Make it visible
+
+  console.log(`LLM-Translator: Popup positioned - Top: ${desiredTop}px, Left: ${desiredLeft}px. Added to DOM.`);
   
   // Close popup when clicking outside
   setTimeout(() => {
