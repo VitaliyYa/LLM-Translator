@@ -150,16 +150,16 @@ Browser verification:
 
 ---
 
-### Stage 5. Polish Extension Options Page
+### Stage 5. Polish Extension Options Page (Completed)
 
-- Standardize options form fields: Target Language (`targetLanguage`), Gemini Model (`model`), and API Key (`apiKey`).
-- Mask the API key field (`type="password"`) and provide a show/hide password toggle.
-- Provide clear description and default placeholder for model selection (`gemini-3.5-flash-lite`).
-- Implement form validation for required fields and valid model name characters.
-- Add a "Test Connection" button that sends a lightweight verification ping via `background.js` and `gemini.js`.
-- Add an `aria-live="polite"` region for accessible status and error announcements.
-- Include direct link to Google AI Studio with instructions for obtaining a free API key.
-- Style options page with automatic light and dark theme support.
+- [x] Standardize options form fields: Target Language (`targetLanguage`), Gemini Model (`model`), and API Key (`apiKey`).
+- [x] Mask the API key field (`type="password"`) and provide a show/hide password toggle.
+- [x] Provide clear description and default placeholder for model selection (`gemini-3.5-flash-lite`).
+- [x] Implement form validation for required fields and valid model name characters.
+- [x] Add a "Test Connection" button that sends a lightweight verification ping via `background.js` and `gemini.js`.
+- [x] Add an `aria-live="polite"` region for accessible status and error announcements.
+- [x] Include direct link to Google AI Studio with instructions for obtaining a free API key.
+- [x] Style options page with automatic light and dark theme support.
 
 Browser verification:
 
