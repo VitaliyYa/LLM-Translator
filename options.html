@@ -6,7 +6,7 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     label { display: block; margin: 10px 0 5px; }
-    input[type="text"], input[type="url"] { width: 100%; padding: 5px; box-sizing: border-box; }
+    input[type="text"] { width: 100%; padding: 5px; box-sizing: border-box; }
     button { margin-top: 15px; padding: 10px 15px; }
     .status { margin-top: 10px; color: green; }
     .error { margin-top: 10px; color: red; }
@@ -15,8 +15,8 @@
 <body>
   <h1>LLM Translator Settings</h1>
   <form id="settings-form">
-    <label for="baseLanguage">Base Translation Language:</label>
-    <input type="text" id="baseLanguage" name="baseLanguage" placeholder="For example, RUSSIAN" required>
+    <label for="targetLanguage">Target Language:</label>
+    <input type="text" id="targetLanguage" name="targetLanguage" placeholder="For example, Russian" required>
     
     <label for="model">Gemini Model:</label>
     <input type="text" id="model" name="model" value="gemini-3.5-flash-lite" required>

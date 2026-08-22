@@ -4,9 +4,7 @@
     "version": "1.0",
     "description": "Переводит выделенный текст с использованием LLM API.",
     "permissions": [
-      "storage",
-      "activeTab",
-      "scripting"
+      "storage"
     ],
     "host_permissions": [
       "https://generativelanguage.googleapis.com/*"
