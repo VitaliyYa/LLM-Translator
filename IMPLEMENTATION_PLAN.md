@@ -129,17 +129,17 @@ Browser verification:
 
 ---
 
-### Stage 4. Encapsulate Translation UI (Shadow DOM, a11y, Themes)
+### Stage 4. Encapsulate Translation UI (Shadow DOM, a11y, Themes) (Completed)
 
-- Mount all injected extension UI within an open Shadow DOM (`attachShadow({ mode: 'open' })`) to isolate styles from host page CSS.
-- Encapsulate UI styling in `content.css` and inject it inside the Shadow Root.
-- Replace the clickable `div` with an accessible `button` element featuring `aria-label`, visible focus indicator, and `Enter`/`Space` activation.
-- Display a loading indicator (spinner) immediately upon clicking translate.
-- Add action buttons: "Copy" (with temporary "Copied!" confirmation toast), "Retry", and "Close".
-- Preserve whitespace and line breaks with `white-space: pre-wrap`.
-- Constrain dimensions (`maxWidth`, `maxHeight`), enable internal scrolling (`overflow-y: auto`), and clamp positioning within the viewport.
-- Provide light and dark theme styling responding to `prefers-color-scheme`.
-- Suppress internal system URLs and raw API errors from user display.
+- [x] Mount all injected extension UI within an open Shadow DOM (`attachShadow({ mode: 'open' })`) to isolate styles from host page CSS.
+- [x] Encapsulate UI styling in `content.css` and inject it inside the Shadow Root.
+- [x] Replace the clickable `div` with an accessible `button` element featuring `aria-label`, visible focus indicator, and `Enter`/`Space` activation.
+- [x] Display a loading indicator (spinner) immediately upon clicking translate.
+- [x] Add action buttons: "Copy" (with temporary "Copied!" confirmation toast), "Retry", and "Close".
+- [x] Preserve whitespace and line breaks with `white-space: pre-wrap`.
+- [x] Constrain dimensions (`maxWidth`, `maxHeight`), enable internal scrolling (`overflow-y: auto`), and clamp positioning within the viewport.
+- [x] Provide light and dark theme styling responding to `prefers-color-scheme`.
+- [x] Suppress internal system URLs and raw API errors from user display.
 
 Browser verification:
 
