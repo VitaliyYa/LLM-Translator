@@ -89,17 +89,17 @@ Browser verification:
 
 ---
 
-### Stage 2. Extract `gemini.js` Module & Introduce Unit Tests
+### Stage 2. Extract `gemini.js` Module & Introduce Unit Tests (Completed)
 
-- Add `"type": "module"` to the `background` block in `manifest.json` for native ESM Service Worker support.
-- Extract all Gemini integration logic into a standalone `gemini.js` module exporting pure functions (zero `chrome.*` dependencies).
-- Maintain `systemInstruction`, structured output schema (`responseSchema`), and chunk concatenation.
-- Add granular inspection of HTTP status, `promptFeedback.blockReason`, and `candidates[0].finishReason` (handling `SAFETY`, `RECITATION`, `MAX_TOKENS`).
-- Implement 30-second request timeout using `AbortController`.
-- Enforce 10,000 character limit on translation input before making network calls.
-- Normalize all error states into typed codes: `SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK`, `BAD_RESPONSE`.
-- Migrate background message handling to `{ type: 'translation.request', requestId, text }`, preserving backwards-compatibility during migration.
-- Create automated test suite `tests/gemini.test.js` using Node.js built-in `node:test` and `node:assert` for request building, response parsing, and error normalization.
+- [x] Add `"type": "module"` to the `background` block in `manifest.json` for native ESM Service Worker support.
+- [x] Extract all Gemini integration logic into a standalone `gemini.js` module exporting pure functions (zero `chrome.*` dependencies).
+- [x] Maintain `systemInstruction`, structured output schema (`responseSchema`), and chunk concatenation.
+- [x] Add granular inspection of HTTP status, `promptFeedback.blockReason`, and `candidates[0].finishReason` (handling `SAFETY`, `RECITATION`, `MAX_TOKENS`).
+- [x] Implement 30-second request timeout using `AbortController`.
+- [x] Enforce 10,000 character limit on translation input before making network calls.
+- [x] Normalize all error states into typed codes: `SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK`, `BAD_RESPONSE`.
+- [x] Migrate background message handling to `{ type: 'translation.request', requestId, text }`, preserving backwards-compatibility during migration.
+- [x] Create automated test suite `tests/gemini.test.js` using Node.js built-in `node:test` and `node:assert` for request building, response parsing, and error normalization.
 
 Verification:
 

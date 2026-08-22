@@ -9,15 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / In Development]
 
-### Planned (Stage 2): Gemini Module & Automated Tests
-- Extract API logic into a pure ES module (`gemini.js`).
-- Enable native ESM in Service Worker (`"type": "module"`).
-- Implement 30-second request timeout via `AbortController`.
-- Enforce 10,000 character limit on translation inputs.
-- Inspect API safety blocks (`promptFeedback.blockReason`, `finishReason`).
-- Normalize error codes (`SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK`, `BAD_RESPONSE`).
-- Introduce native unit tests using `node:test` (`tests/gemini.test.js`).
-
 ### Planned (Stage 3): Content Script Lifecycle & State Machine
 - Capture text selection and bounding rects strictly on `mouseup` using `range.getClientRects()`.
 - Implement Finite State Machine (`IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`).
@@ -44,6 +35,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade GitHub Actions runner to Node.js 20 LTS.
 - Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
 - Update packaging scripts for distribution.
+
+---
+
+## [0.3.0] - 2026-08-22
+
+### Added (Stage 2: Gemini Module & Automated Tests)
+- Modularized Gemini API logic into an isolated pure ES module (`gemini.js`) with native ESM support in Service Worker (`manifest.json`).
+- Implemented 30-second request timeout via `AbortController` and 10,000 character limit on translation input.
+- Added structured API response inspection for safety blocks (`promptFeedback.blockReason`, `finishReason`).
+- Added typed error normalization (`SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK`, `BAD_RESPONSE`).
+- Migrated background message handling to `{ type: 'translation.request', requestId, text }` with backward compatibility for existing content scripts.
+- Added comprehensive unit test suite (`tests/gemini.test.js`) executed via Node.js built-in `node:test`.
 
 ---
 
