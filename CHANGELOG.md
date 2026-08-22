@@ -9,14 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / In Development]
 
-### Planned (Stage 4): Encapsulated Translation UI
-- Encapsulate UI and styles within an open Shadow DOM.
-- Replace clickable `div` with accessible `button` (`aria-label`, visible focus, Enter/Space support).
-- Display loading spinner immediately upon clicking translate.
-- Add "Copy" (with feedback toast), "Retry", and "Close" action buttons.
-- Preserve formatting with `white-space: pre-wrap`, internal scrolling, and viewport-boundary clamping.
-- Support light and dark color schemes via `prefers-color-scheme`.
-
 ### Planned (Stage 5): Options Page Polish
 - Mask API key field (`type="password"`) with a show/hide toggle.
 - Add "Test Connection" button with a lightweight verification ping.
@@ -28,6 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade GitHub Actions runner to Node.js 20 LTS.
 - Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
 - Update packaging scripts for distribution.
+
+---
+
+## [0.5.0] - 2026-08-22
+
+### Added (Stage 4: Encapsulate Translation UI)
+- Encapsulated injected content script UI inside an open Shadow DOM (`attachShadow({ mode: 'open' })`) to prevent styling conflicts with host page stylesheets.
+- Added `content.css` containing isolated styling, CSS variables, and light/dark theme support responding to `prefers-color-scheme`.
+- Replaced trigger `div` with an accessible semantic `<button>` element with `aria-label`, visible `:focus-visible` ring, and keyboard trigger (`Enter`/`Space`).
+- Implemented immediate loading spinner state on translation trigger.
+- Added action buttons to translation popup: "Copy" (with temporary "Copied!" feedback and clipboard fallback), "Retry" (to re-dispatch failed requests without re-selecting), and "Close".
+- Preserved text whitespace and formatting with `white-space: pre-wrap` and added internal vertical scrollbar for long translations.
+- Implemented multi-directional viewport boundary clamping algorithm across all four viewport edges with scroll offset support.
+- Sanitized user-facing error messages to prevent leakage of internal system URLs or raw API payloads.
 
 ---
 

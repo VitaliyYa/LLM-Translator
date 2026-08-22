@@ -6,6 +6,7 @@ echo Копирование файлов в директорию для Firefox.
 xcopy /y background.js firefox_build\
 xcopy /y gemini.js firefox_build\
 xcopy /y content.js firefox_build\
+xcopy /y content.css firefox_build\
 xcopy /y options.html firefox_build\
 xcopy /y options.js firefox_build\
 xcopy /y /i icons firefox_build\icons
