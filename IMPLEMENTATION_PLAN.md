@@ -69,16 +69,16 @@ Completion criterion: Baseline translation workflow functions in Chrome; roadmap
 
 ---
 
-### Stage 1. Secure API Key, Migrate to `chrome.storage.local` & Clean Manifest
+### Stage 1. Secure API Key, Migrate to `chrome.storage.local` & Clean Manifest (Completed)
 
-- Pass Gemini API key exclusively via the `x-goog-api-key` HTTP header; remove key from URL query parameters.
-- Remove all sensitive data logging to console (user input text, response payloads, raw API `errorText`).
-- Remove insecure URL query parameter parsing (`window.location.search`) on the options page.
-- Migrate settings storage from `chrome.storage.sync` to `chrome.storage.local`.
-- Implement automatic first-run migration: transfer `baseLanguage` and `apiKey` from `storage.sync`, rename to `targetLanguage`, save to `storage.local`, and purge old sync entry.
-- Synchronously update storage reading/writing in `options.js` and `background.js` to match the `{ apiKey, targetLanguage, model }` schema.
-- Remove unused permissions `activeTab` and `scripting` from `manifest.json`.
-- Remove dead `input[type="url"]` selector from `options.html`.
+- [x] Pass Gemini API key exclusively via the `x-goog-api-key` HTTP header; remove key from URL query parameters.
+- [x] Remove all sensitive data logging to console (user input text, response payloads, raw API `errorText`).
+- [x] Remove insecure URL query parameter parsing (`window.location.search`) on the options page.
+- [x] Migrate settings storage from `chrome.storage.sync` to `chrome.storage.local`.
+- [x] Implement automatic first-run migration: transfer `baseLanguage` and `apiKey` from `storage.sync`, rename to `targetLanguage`, save to `storage.local`, and purge old sync entry.
+- [x] Synchronously update storage reading/writing in `options.js` and `background.js` to match the `{ apiKey, targetLanguage, model }` schema.
+- [x] Remove unused permissions `activeTab` and `scripting` from `manifest.json`.
+- [x] Remove dead `input[type="url"]` selector from `options.html`.
 
 Browser verification:
 

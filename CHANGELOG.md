@@ -9,13 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / In Development]
 
-### Planned (Stage 1): Security & Local Storage
-- Transmit Gemini API key via `x-goog-api-key` HTTP header.
-- Migrate settings storage from `chrome.storage.sync` to `chrome.storage.local` with `{ apiKey, targetLanguage, model }` schema.
-- Remove all sensitive data and API error response bodies from console logs.
-- Remove insecure URL query parameter parsing in `options.js` (`window.location.search`).
-- Clean up unused `activeTab` and `scripting` permissions from `manifest.json`.
-
 ### Planned (Stage 2): Gemini Module & Automated Tests
 - Extract API logic into a pure ES module (`gemini.js`).
 - Enable native ESM in Service Worker (`"type": "module"`).
@@ -51,6 +44,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade GitHub Actions runner to Node.js 20 LTS.
 - Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
 - Update packaging scripts for distribution.
+
+---
+
+## [0.2.0] - 2026-08-22
+
+### Security (Stage 1: Secure API Key & Storage Migration)
+- Switched Gemini API authentication to the `x-goog-api-key` HTTP header, removing API key from URL query parameters.
+- Migrated settings storage from `chrome.storage.sync` to `chrome.storage.local` with automatic first-run backward migration.
+- Sanitized console logs across background, content, and options scripts to prevent leakage of user text, API keys, and error payloads.
+- Removed insecure URL query parameter parsing (`window.location.search`) on the options page.
+
+### Changed
+- Standardized storage schema to `{ apiKey, targetLanguage, model }`.
+- Cleaned unused `activeTab` and `scripting` permissions from `manifest.json`.
+- Removed obsolete `input[type="url"]` style selector from `options.html`.
 
 ---
 
