@@ -1,45 +1,45 @@
-# План развития LLM Translator
+# Implementation Plan: LLM Translator
 
-## 1. Цель и принятые решения
+## 1. Goals & Decisions
 
-Проект остается небольшим учебным расширением для личного использования. Основной сценарий: пользователь выделяет текст на странице, нажимает появившуюся кнопку и получает перевод через Gemini API с ключом из Google AI Studio.
+The project remains a lightweight educational browser extension for personal use. The primary user flow: a user selects text on a web page, clicks the floating action button, and receives an instant translation via the Google Gemini API with an API key from Google AI Studio.
 
-Принятые ограничения:
+Architectural Constraints:
 
-- поддерживается только Gemini API;
-- основной браузер для разработки — Chrome/Chromium с Manifest V3;
-- совместимость с Firefox проверяется после стабилизации каждого крупного изменения;
-- остаемся на vanilla HTML, CSS и JavaScript без фреймворка, TypeScript и сборщика;
-- автоматические тесты добавляются только для чистой логики, основной способ проверки UI — реальный браузер;
-- перевод выделения внутри `input`, `textarea`, PDF viewer и закрытых Shadow DOM на первом этапе не поддерживается;
-- публикация в магазинах расширений пока не является целью.
+- Exclusively supports the Google Gemini API.
+- Primary development platform: Chrome/Chromium with Manifest V3.
+- Firefox compatibility is verified after stabilizing each major stage.
+- Pure vanilla HTML, CSS, and JavaScript without heavy frameworks, TypeScript, or complex bundlers.
+- Automated tests use Node.js built-in `node:test` for pure logic; manual browser validation remains the primary UI verification method.
+- Text selection inside `<input>`, `<textarea>`, PDF viewers, and closed Shadow DOM roots is out of scope for initial phases.
+- Publishing to extension stores is not an active goal at this time.
 
-## 2. Целевая структура
+## 2. Target Architecture
 
-Код должен быть разделен по ответственности, но без лишних абстракций:
+Code is cleanly organized by responsibility without unnecessary abstractions, leveraging native ES modules:
 
-- `background.js` — прием сообщений, загрузка настроек и управление запросом;
-- `gemini.js` — формирование запроса Gemini, разбор ответа и нормализация ошибок;
-- `content.js` — отслеживание выделения и управление состоянием интерфейса;
-- `content.css` — стили кнопки и окна перевода;
-- `options.js` и `options.css` — хранение и отображение настроек;
-- `manifest.json` и `manifest.firefox.json` — только браузерные разрешения и точки входа;
-- `tests/` — тесты формирования запроса, разбора ответа и проверки настроек.
+- `background.js` — Service Worker (`"type": "module"` in manifest), handles message routing, storage access, and invokes translation logic.
+- `gemini.js` — Pure ES module for request formatting, response parsing, safety block inspection, and error normalization (zero dependencies on `chrome.*` APIs).
+- `content.js` — Selection interception, UI finite state machine, and Shadow DOM mounting.
+- `content.css` — Encapsulated styles for the button and translation popup within the Shadow DOM.
+- `options.html`, `options.js`, and `options.css` — Extension options page with key masking and validation.
+- `manifest.json` and `manifest.firefox.json` — Minimal required browser permissions and entry points.
+- `tests/` — Automated `node:test` suites for request building, response parsing, and settings validation.
 
-Публичный протокол между content script и background script:
+Messaging protocol between `content.js` and `background.js`:
 
 ```js
-// Запрос
+// Translation request
 { type: 'translation.request', requestId, text }
 
-// Успех
+// Successful response
 { requestId, ok: true, translation }
 
-// Ошибка
+// Error response
 { requestId, ok: false, error: { code, message } }
 ```
 
-Настройки:
+Storage schema (`chrome.storage.local`):
 
 ```js
 {
@@ -49,139 +49,160 @@
 }
 ```
 
-API endpoint не вводится пользователем. Он формируется внутри расширения как `https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent`.
+The API endpoint is hardcoded internally as `https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent`.
 
-## 3. Этапы реализации
+## 3. Implementation Stages
 
-### Этап 0. Зафиксировать исходное поведение
+### Stage 0. Baseline Integration (Completed)
 
-- [x] Привести базовый запрос к актуальному примеру Google AI Studio: модель `gemini-3.5-flash-lite`, метод `streamGenerateContent`, роль `user` и минимальный уровень thinking.
-- [x] Разделить системные инструкции и переводимый текст, включить structured output со схемой поля `translation`.
-- [x] Формировать URL из имени модели и корректно объединять текст потоковых чанков ответа.
-- [x] Добавить Chrome host permission для `https://generativelanguage.googleapis.com/*`, без которого service worker не может надежно выполнить cross-origin запрос.
-- [x] Не подключать `googleSearch`: для перевода он не требуется, хотя присутствует как опциональный инструмент в примере AI Studio.
-- [x] Загрузить текущую версию как unpacked extension в Chrome.
-- [x] Вручную проверить сохранение настроек, появление кнопки после выделения и успешный перевод в Chrome.
-- [x] Проверить закрытие окна по Escape.
-- [ ] Записать найденные ошибки и сделать скриншоты текущего UI для сравнения.
+- [x] Align base request structure with Google AI Studio: model `gemini-3.5-flash-lite`, method `streamGenerateContent`, role `user`, and minimal thinking level.
+- [x] Separate system instructions and user text; enable structured output with `{ translation: string }` schema.
+- [x] Format URL from model name and correctly aggregate streaming chunks.
+- [x] Add Chrome host permission for `https://generativelanguage.googleapis.com/*` required for cross-origin service worker requests.
+- [x] Exclude `googleSearch` tool (unnecessary for pure translation).
+- [x] Load unpacked extension into Chrome.
+- [x] Manually verify settings storage, selection button appearance, and translation delivery in Chrome.
+- [x] Verify popup dismissal via Escape key.
+- [x] Perform codebase audit and align implementation roadmap with actual state.
 
-Критерий готовности: есть короткий список реально работающих и неработающих сценариев текущей версии.
+Completion criterion: Baseline translation workflow functions in Chrome; roadmap reflects actual codebase state.
 
-### Этап 1. Упростить настройки и защитить ключ от случайной утечки
+---
 
-- Удалить поддержку произвольного API URL и определение провайдера по адресу.
-- Передавать ключ Gemini через заголовок `x-goog-api-key`, а не через query-параметр.
-- Удалить вывод ключа, полного запроса, исходного текста и полного ответа Gemini в консоль.
-- Удалить заполнение настроек из URL страницы options.
-- Хранить все настройки в `chrome.storage.local`. Это защищает ключ от синхронизации, но не является шифрованием; ключ по-прежнему доступен пользователю и самому расширению.
-- При первом запуске перенести существующие `baseLanguage` и `apiKey` из `storage.sync`, переименовать язык в `targetLanguage`, затем удалить старый ключ из sync storage.
-- В Chrome-манифесте сохранить точный `host_permissions`: `https://generativelanguage.googleapis.com/*`.
-- Удалить неиспользуемые разрешения `activeTab` и `scripting`.
+### Stage 1. Secure API Key, Migrate to `chrome.storage.local` & Clean Manifest
 
-Проверка в браузере:
+- Pass Gemini API key exclusively via the `x-goog-api-key` HTTP header; remove key from URL query parameters.
+- Remove all sensitive data logging to console (user input text, response payloads, raw API `errorText`).
+- Remove insecure URL query parameter parsing (`window.location.search`) on the options page.
+- Migrate settings storage from `chrome.storage.sync` to `chrome.storage.local`.
+- Implement automatic first-run migration: transfer `baseLanguage` and `apiKey` from `storage.sync`, rename to `targetLanguage`, save to `storage.local`, and purge old sync entry.
+- Synchronously update storage reading/writing in `options.js` and `background.js` to match the `{ apiKey, targetLanguage, model }` schema.
+- Remove unused permissions `activeTab` and `scripting` from `manifest.json`.
+- Remove dead `input[type="url"]` selector from `options.html`.
 
-1. Старые настройки мигрируют и продолжают работать.
-2. В URL запросов, консоли и сообщениях об ошибках ключ отсутствует.
-3. После перезагрузки расширения настройки сохраняются.
-4. Неверный ключ дает понятную ошибку без вывода тела ответа API на страницу.
+Browser verification:
 
-### Этап 2. Сделать интеграцию с Gemini предсказуемой
+1. Existing settings automatically migrate from sync to local storage without user intervention.
+2. API keys are absent from outgoing URL query strings, console logs, and UI error messages.
+3. Settings persist across browser restarts and extension reloads in `chrome.storage.local`.
+4. An invalid API key yields a clear error message without leaking raw API payload to the page.
 
-- Вынести работу с Gemini в отдельный модуль без универсального provider-интерфейса.
-- Передавать инструкцию переводчика как `systemInstruction`, а выделенный текст — отдельной пользовательской частью `contents`.
-- Запрашивать JSON через `responseMimeType: "application/json"` и schema с обязательным строковым полем `translation`.
-- Убрать извлечение JSON регулярным выражением.
-- Проверять HTTP status, структуру `candidates`, пустые ответы и причины блокировки Gemini.
-- Добавить таймаут 30 секунд через `AbortController`.
-- Ограничить текст разумным лимитом в 10 000 символов до отправки.
-- Нормализовать ошибки в коды `SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK` и `BAD_RESPONSE`.
+---
 
-Проверка в браузере:
+### Stage 2. Extract `gemini.js` Module & Introduce Unit Tests
 
-1. Переводятся обычный текст, многострочный текст, кавычки, фигурные скобки и текст с инструкциями для модели.
-2. Пустой ответ, отключенная сеть, неверный ключ и превышение лимита не ломают content script.
-3. Запрос завершается по таймауту и после этого можно запустить новый перевод.
+- Add `"type": "module"` to the `background` block in `manifest.json` for native ESM Service Worker support.
+- Extract all Gemini integration logic into a standalone `gemini.js` module exporting pure functions (zero `chrome.*` dependencies).
+- Maintain `systemInstruction`, structured output schema (`responseSchema`), and chunk concatenation.
+- Add granular inspection of HTTP status, `promptFeedback.blockReason`, and `candidates[0].finishReason` (handling `SAFETY`, `RECITATION`, `MAX_TOKENS`).
+- Implement 30-second request timeout using `AbortController`.
+- Enforce 10,000 character limit on translation input before making network calls.
+- Normalize all error states into typed codes: `SETTINGS_MISSING`, `TEXT_TOO_LONG`, `TIMEOUT`, `AUTH`, `RATE_LIMIT`, `BLOCKED`, `NETWORK`, `BAD_RESPONSE`.
+- Migrate background message handling to `{ type: 'translation.request', requestId, text }`, preserving backwards-compatibility during migration.
+- Create automated test suite `tests/gemini.test.js` using Node.js built-in `node:test` and `node:assert` for request building, response parsing, and error normalization.
 
-### Этап 3. Исправить состояние и жизненный цикл content script
+Verification:
 
-- Сохранять текст и прямоугольник выделения в момент `mouseup`, не читать выделение повторно после клика.
-- Ввести состояния `idle`, `ready`, `loading`, `success` и `error`.
-- Создавать уникальный `requestId`; устаревшие ответы не должны заменять результат нового запроса.
-- Обрабатывать `chrome.runtime.lastError`, отсутствие response и исключения callback.
-- При новом выделении отменять предыдущий запрос логически; при закрытии UI очищать все document listeners и таймеры.
-- Устранить зависимость от флага `preventIconRemoval` и описать переходы состояния явными функциями.
-- Использовать последний непустой прямоугольник диапазона выделения, чтобы кнопка корректно появлялась у многострочного текста.
+1. Automated tests `node --test` pass for valid payloads, chunked streams, malformed JSON, and safety blocks.
+2. In browser: plain text, multiline text, quotes, code symbols, and prompt injection attempts translate reliably.
+3. Empty responses, offline states, invalid keys, and text limit violations return normalized error codes.
+4. Slow/hung requests cleanly abort after 30 seconds.
 
-Проверка в браузере:
+---
 
-1. Быстрые последовательные выделения не показывают устаревший перевод.
-2. Клик по кнопке не уничтожает сохраненный текст.
-3. Escape, клик вне окна и новое выделение всегда корректно очищают интерфейс.
-4. Перезагрузка расширения при открытой вкладке дает понятную ошибку, а не исключение JavaScript.
+### Stage 3. Fix Content Script State Machine & Selection Lifecycle
 
-### Этап 4. Улучшить UI перевода
+- Capture selection text and bounding coordinates strictly at the moment of the `mouseup` event (never read `window.getSelection()` inside the click handler).
+- Implement a deterministic Finite State Machine: `IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`.
+- Completely remove the `preventIconRemoval` flag and resolve all event race conditions.
+- Generate a unique `requestId` per request; ignore stale responses from rapid sequential selections.
+- Add safe handling of `chrome.runtime.lastError` to prevent unhandled exceptions upon extension updates.
+- Implement centralized `cleanup()` method: remove global document listeners (outside clicks, Escape) and clear pending `setTimeout` timers.
+- Use the last non-empty client rectangle (`range.getClientRects()`) to accurately position the button at the end of multiline selections.
 
-- Создать один host-элемент с Shadow DOM, чтобы стили и ID страницы не конфликтовали с расширением.
-- Заменить кликабельный `div` на `button` с `aria-label`, focus style и активацией клавишами Enter/Space.
-- Показывать индикатор загрузки сразу после клика.
-- Добавить кнопки «Копировать», «Повторить» и «Закрыть», а также короткое подтверждение копирования.
-- Сохранять переносы строк через `white-space: pre-wrap`.
-- Ограничить ширину и высоту окна, добавить внутреннюю прокрутку и позиционирование в пределах viewport.
-- Добавить светлую и темную темы через `prefers-color-scheme`.
-- Не показывать пользователю внутренние ответы и URL Gemini.
+Browser verification:
 
-Проверка в браузере:
+1. Rapid sequential selections display only the translation for the most recently selected text.
+2. Clicking the translate button reliably dispatches saved text even if DOM focus/selection was lost.
+3. Pressing Escape, clicking outside, or clearing selection cleans up all UI and removes document event listeners.
+4. Reloading the extension in `chrome://extensions` while a tab is open does not trigger uncaught runtime crashes on the page.
 
-1. UI проверен на Wikipedia, GitHub и странице с агрессивными глобальными CSS-правилами.
-2. Кнопка и окно не выходят за четыре края viewport при разных масштабах страницы.
-3. Весь сценарий доступен с клавиатуры, Escape закрывает окно.
-4. Длинный перевод прокручивается, переносы строк сохраняются, копирование работает.
+---
 
-### Этап 5. Улучшить страницу настроек
+### Stage 4. Encapsulate Translation UI (Shadow DOM, a11y, Themes)
 
-- Оставить три поля: язык перевода, модель Gemini и API-ключ.
-- Для модели использовать обычное текстовое поле с документированным значением по умолчанию, чтобы устаревание списка моделей не требовало выпуска новой версии.
-- Сделать поле ключа типом `password`, добавить кнопку показать/скрыть.
-- Проверять обязательность полей и допустимые символы имени модели.
-- Добавить кнопку «Проверить подключение», выполняющую короткий тестовый запрос через background script.
-- Показывать состояния сохранения и проверки через область `aria-live`.
-- Добавить ссылку на Google AI Studio и пояснение, где создается ключ.
+- Mount all injected extension UI within an open Shadow DOM (`attachShadow({ mode: 'open' })`) to isolate styles from host page CSS.
+- Encapsulate UI styling in `content.css` and inject it inside the Shadow Root.
+- Replace the clickable `div` with an accessible `button` element featuring `aria-label`, visible focus indicator, and `Enter`/`Space` activation.
+- Display a loading indicator (spinner) immediately upon clicking translate.
+- Add action buttons: "Copy" (with temporary "Copied!" confirmation toast), "Retry", and "Close".
+- Preserve whitespace and line breaks with `white-space: pre-wrap`.
+- Constrain dimensions (`maxWidth`, `maxHeight`), enable internal scrolling (`overflow-y: auto`), and clamp positioning within the viewport.
+- Provide light and dark theme styling responding to `prefers-color-scheme`.
+- Suppress internal system URLs and raw API errors from user display.
 
-Проверка в браузере:
+Browser verification:
 
-1. Пустые и некорректные значения не сохраняются.
-2. Ключ по умолчанию скрыт и не появляется в URL или console log.
-3. Проверка подключения различает успешный запрос, неверный ключ, недоступную модель и сетевую ошибку.
+1. UI renders correctly on websites with aggressive global CSS resets (Wikipedia, GitHub, MDN).
+2. Icon and popup never overflow beyond any of the four viewport edges across zoom levels and scroll positions.
+3. Complete translation flow is accessible via keyboard (`Tab`, `Enter`, `Space`, `Escape`).
+4. Long multiline texts scroll smoothly; clipboard copying functions reliably.
 
-### Этап 6. Firefox и минимальная автоматизация
+---
 
-- После стабилизации Chrome проверить используемые WebExtension API в актуальном Firefox.
-- Сохранить отдельный Firefox manifest только там, где различия действительно необходимы.
-- Проверить те же ручные сценарии перевода и настроек в Firefox.
-- Добавить `node:test` для чистых функций Gemini и валидации настроек без тяжелого test framework.
-- Добавить команды проверки синтаксиса, тестов и упаковки; запускать их в GitHub Actions.
-- Обновить README: установка в Chrome/Firefox, создание ключа, настройка модели, ограничения и диагностика.
+### Stage 5. Polish Extension Options Page
 
-Критерий готовности: одинаковый основной сценарий работает в Chrome и Firefox, а тесты проверяют успешные и ошибочные ответы Gemini.
+- Standardize options form fields: Target Language (`targetLanguage`), Gemini Model (`model`), and API Key (`apiKey`).
+- Mask the API key field (`type="password"`) and provide a show/hide password toggle.
+- Provide clear description and default placeholder for model selection (`gemini-3.5-flash-lite`).
+- Implement form validation for required fields and valid model name characters.
+- Add a "Test Connection" button that sends a lightweight verification ping via `background.js` and `gemini.js`.
+- Add an `aria-live="polite"` region for accessible status and error announcements.
+- Include direct link to Google AI Studio with instructions for obtaining a free API key.
+- Style options page with automatic light and dark theme support.
 
-## 4. Порядок коммитов
+Browser verification:
 
-Каждый этап выполняется отдельным небольшим набором коммитов:
+1. Empty or malformed inputs are blocked by client-side validation.
+2. The API key is masked by default and not exposed in HTML source or logs.
+3. Connection test distinguishes between success, invalid key, unavailable model, and network failure.
+4. Screen readers announce status updates via `aria-live`.
 
-1. изменение кода без косметического рефакторинга;
-2. ручная проверка в Chrome и фиксация результата;
-3. тесты для новой чистой логики, если она появилась;
-4. контрольный коммит документации;
-5. для крупных этапов — дополнительная проверка в Firefox.
+---
 
-Не начинать следующий этап, пока текущий сценарий не проверен в реальном браузере и обнаруженные регрессии не исправлены.
+### Stage 6. Firefox Compatibility, CI/CD Automation & Documentation
 
-## 5. Итоговые критерии проекта
+- Verify WebExtension API compatibility and behavior in current Firefox versions.
+- Standardize Firefox manifest (`manifest.firefox.json`) with aligned permissions (MV3 where supported or scoped MV2).
+- Upgrade GitHub Actions CI runner (`.github/workflows/build-extensions.yml`) to Node.js 20 LTS.
+- Add CI workflow steps for JavaScript syntax checking (`node --check`) and automated unit testing (`node --test`).
+- Update packaging scripts ([prepare_firefox.bat](prepare_firefox.bat) and CI workflow) to include all newly modularized files (`gemini.js`, `content.css`, `options.css`).
+- Add options validation tests in `tests/options.test.js`.
+- Update [README.md](README.md) with comprehensive installation, setup, model configuration, and troubleshooting instructions.
 
-- Расширение переводит выделенный текст только через Gemini API.
-- API-ключ не синхронизируется, не передается в URL и не выводится в логи.
-- Сетевые ошибки и ошибки Gemini не приводят к исключениям в content script.
-- Быстрые повторные запросы и закрытие окна работают предсказуемо.
-- Интерфейс не зависит от CSS страницы, поддерживает клавиатуру и темную тему.
-- Основной сценарий вручную проверен в Chrome и Firefox.
-- README позволяет заново установить и настроить расширение без изучения исходного кода.
+Completion criterion: Translation flow functions identically in Chrome and Firefox; automated tests and builds pass in GitHub Actions; documentation is complete.
+
+---
+
+## 4. Commit Conventions & Development Discipline
+
+Each stage is developed on a dedicated branch with small, focused commits:
+
+1. Logic and code changes without unrelated refactoring.
+2. Automated tests for pure logic (starting from Stage 2).
+3. Manual verification in real browser with recorded results.
+4. Documentation and manifest updates.
+5. Cross-browser validation in Firefox for platform-spanning changes.
+
+Do not begin the next stage until the current stage has been fully verified in the browser and any regressions are resolved.
+
+## 5. Final Project Criteria
+
+- Extension translates text exclusively through the Google Gemini API.
+- API key is stored securely in `chrome.storage.local`, never synced, never passed in URLs, and never logged.
+- Network errors, timeouts, and API safety blocks produce user-friendly error codes without uncaught content script exceptions.
+- Text selection, rapid clicking, and window dismissal behave deterministically without race conditions or memory leaks.
+- UI is encapsulated in Shadow DOM, supports keyboard navigation, and automatically adapts to dark mode.
+- Core flow verified and fully operational in Chrome and Firefox.
+- Pure logic covered with automated `node:test` suites integrated into CI.
+- README allows any developer or user to install and configure the extension without reading source code.
