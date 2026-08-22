@@ -63,10 +63,9 @@ function createTranslatorIcon(rect) {
     
     const selection = window.getSelection().toString().trim();
     if (selection) {
-      console.log(`LLM-Translator: Sending text for translation: "${selection.substring(0, 50)}${selection.length > 50 ? '...' : ''}"`);
+      console.log('LLM-Translator: Sending text for translation');
       chrome.runtime.sendMessage({ type: 'translateText', text: selection }, (response) => {
         preventIconRemoval = false; // Reset flag after response
-        console.log('LLM-Translator: Response received from background script:', response);
         showTranslationPopup(response);
       });
     }
@@ -76,7 +75,6 @@ function createTranslatorIcon(rect) {
 
 // Display popup with translation result
 function showTranslationPopup(response) {
-  console.log('LLM-Translator: Displaying translation result', response);
   if (translationPopup) translationPopup.remove();
   
   translationPopup = document.createElement('div');
@@ -192,7 +190,7 @@ document.addEventListener('mouseup', (e) => {
     const selectedText = selection.toString().trim();
     
     if (selectedText) {
-      console.log(`LLM-Translator: Text selected: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`);
+      console.log('LLM-Translator: Text selected');
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       createTranslatorIcon(rect);
