@@ -16,7 +16,7 @@ node --check gemini.js
 node --check options.js
 
 # 2. Run unit tests (Node.js 18+)
-node --test tests/
+node --test tests/gemini.test.js
 ```
 
 Expected result: All tests pass with status `pass`, 0 errors.
