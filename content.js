@@ -1,3 +1,7 @@
+// ==========================================================================
+// LLM-Translator Content Script (Shadow DOM, a11y, Themes)
+// ==========================================================================
+
 // Finite State Machine states
 const State = {
   IDLE: 'IDLE',
@@ -11,11 +15,27 @@ let currentState = State.IDLE;
 let currentRequestId = null;
 let savedSelectionText = '';
 let savedPosition = null;
-let translatorIcon = null;
+
+let hostElement = null;
+let shadowRoot = null;
+let translatorButton = null;
 let translationPopup = null;
 const activeTimerIds = new Set();
 
 console.log('LLM-Translator: Content script loaded');
+
+/**
+ * Escapes special HTML characters to prevent XSS.
+ */
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 /**
  * Registers a tracked setTimeout so it can be cleanly cancelled in cleanup().
@@ -47,14 +67,40 @@ function generateRequestId() {
 }
 
 /**
- * Centralized cleanup of DOM elements, timers, and global document listeners.
+ * Ensures the open Shadow DOM host container and encapsulated styles are mounted.
+ */
+function ensureShadowRoot() {
+  if (!hostElement || !hostElement.isConnected) {
+    hostElement = document.createElement('div');
+    hostElement.id = 'llm-translator-host';
+    hostElement.style.position = 'static';
+    hostElement.style.margin = '0';
+    hostElement.style.padding = '0';
+    hostElement.style.border = '0';
+    hostElement.style.width = '0';
+    hostElement.style.height = '0';
+
+    shadowRoot = hostElement.attachShadow({ mode: 'open' });
+
+    const linkEl = document.createElement('link');
+    linkEl.rel = 'stylesheet';
+    linkEl.href = chrome.runtime.getURL('content.css');
+    shadowRoot.appendChild(linkEl);
+
+    (document.body || document.documentElement).appendChild(hostElement);
+  }
+  return shadowRoot;
+}
+
+/**
+ * Centralized cleanup of UI elements, timers, and global document listeners.
  */
 function cleanup() {
   clearTrackedTimers();
 
-  if (translatorIcon) {
-    translatorIcon.remove();
-    translatorIcon = null;
+  if (translatorButton) {
+    translatorButton.remove();
+    translatorButton = null;
   }
 
   if (translationPopup) {
@@ -79,46 +125,183 @@ function handleKeyDown(event) {
  * Handles clicks outside translator UI elements to dismiss them.
  */
 function handleDocumentClick(event) {
-  if (
-    (translatorIcon && translatorIcon.contains(event.target)) ||
-    (translationPopup && translationPopup.contains(event.target))
-  ) {
+  const path = event.composedPath ? event.composedPath() : [];
+  if (hostElement && (path.includes(hostElement) || hostElement.contains(event.target))) {
     return;
   }
   transitionTo(State.IDLE);
 }
 
 /**
- * Creates and mounts the translator trigger icon.
+ * Positions a DOM element within the viewport across all 4 edges with scroll offsets.
  */
-function createTranslatorIcon(position) {
-  if (translatorIcon) {
-    translatorIcon.remove();
-    translatorIcon = null;
+function positionElement(element, anchorPos) {
+  const root = ensureShadowRoot();
+
+  // Temporarily mount with hidden visibility to calculate dimensions
+  element.style.visibility = 'hidden';
+  element.style.top = '-9999px';
+  element.style.left = '-9999px';
+  root.appendChild(element);
+
+  const elemWidth = element.offsetWidth || 300;
+  const elemHeight = element.offsetHeight || 120;
+
+  const anchorTop = anchorPos ? anchorPos.top : window.scrollY + 50;
+  const anchorLeft = anchorPos ? anchorPos.left : window.scrollX + 50;
+  const anchorHeight = 32;
+
+  let desiredTop = anchorTop + anchorHeight + 4;
+  let desiredLeft = anchorLeft;
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollX = window.scrollX || window.pageXOffset || 0;
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const buffer = 10;
+
+  const minLeft = scrollX + buffer;
+  const maxLeft = scrollX + viewportWidth - elemWidth - buffer;
+  const minTop = scrollY + buffer;
+  const maxTop = scrollY + viewportHeight - elemHeight - buffer;
+
+  // Viewport horizontal clamping
+  if (desiredLeft > maxLeft) {
+    desiredLeft = maxLeft;
+  }
+  if (desiredLeft < minLeft) {
+    desiredLeft = minLeft;
   }
 
-  translatorIcon = document.createElement('div');
-  translatorIcon.id = 'translator-icon';
-  translatorIcon.style.position = 'absolute';
-  translatorIcon.style.top = `${position.top}px`;
-  translatorIcon.style.left = `${position.left}px`;
-  translatorIcon.style.width = '32px';
-  translatorIcon.style.height = '32px';
-  translatorIcon.style.backgroundImage = `url(${chrome.runtime.getURL('icons/icon48.png')})`;
-  translatorIcon.style.backgroundSize = 'contain';
-  translatorIcon.style.backgroundRepeat = 'no-repeat';
-  translatorIcon.style.backgroundPosition = 'center center';
-  translatorIcon.style.cursor = 'pointer';
-  translatorIcon.style.zIndex = '9999';
+  // Viewport vertical clamping and flipping
+  if (desiredTop > maxTop) {
+    const topAbove = anchorTop - elemHeight - 6;
+    if (topAbove >= minTop) {
+      desiredTop = topAbove;
+    } else {
+      desiredTop = Math.max(minTop, Math.min(desiredTop, maxTop));
+    }
+  }
+  if (desiredTop < minTop) {
+    desiredTop = minTop;
+  }
+
+  element.style.top = `${desiredTop}px`;
+  element.style.left = `${desiredLeft}px`;
+  element.style.visibility = 'visible';
+}
+
+/**
+ * Copies text to clipboard with modern API and fallback support.
+ */
+async function copyToClipboard(text, copyButton) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      textArea.remove();
+    }
+
+    if (copyButton) {
+      const originalText = copyButton.textContent;
+      copyButton.textContent = 'Copied!';
+      copyButton.classList.add('llm-btn-success');
+      setTrackedTimeout(() => {
+        if (copyButton && copyButton.isConnected) {
+          copyButton.textContent = originalText;
+          copyButton.classList.remove('llm-btn-success');
+        }
+      }, 1500);
+    }
+  } catch (err) {
+    if (copyButton) {
+      copyButton.textContent = 'Error';
+      setTrackedTimeout(() => {
+        if (copyButton && copyButton.isConnected) {
+          copyButton.textContent = 'Copy';
+        }
+      }, 1500);
+    }
+  }
+}
+
+/**
+ * Sanitizes user-facing error messages to avoid leaking URLs or raw API payloads.
+ */
+function getSanitizedErrorMessage(error) {
+  if (!error) return 'Translation failed due to an unexpected error.';
+
+  const code = error.code;
+  switch (code) {
+    case 'SETTINGS_MISSING':
+      return 'Settings not configured. Please open extension options to set your API key and target language.';
+    case 'TEXT_TOO_LONG':
+      return 'Selected text exceeds the 10,000 character limit.';
+    case 'TIMEOUT':
+      return 'Translation request timed out after 30 seconds.';
+    case 'AUTH':
+      return 'Authentication failed: invalid API key or insufficient permissions.';
+    case 'RATE_LIMIT':
+      return 'API rate limit exceeded. Please wait a moment and try again.';
+    case 'BLOCKED':
+      return error.message && !error.message.includes('http') ? error.message : 'Translation was blocked by safety policy.';
+    case 'NETWORK':
+      return 'Network connection failed. Please check your internet connection.';
+    case 'BAD_RESPONSE':
+    default: {
+      let msg = error.message || 'Translation failed.';
+      msg = msg.replace(/https?:\/\/[^\s]+/g, '[API endpoint]');
+      return msg;
+    }
+  }
+}
+
+/**
+ * Creates and mounts the accessible translator trigger button within Shadow DOM.
+ */
+function createTranslatorButton(position) {
+  if (translatorButton) {
+    translatorButton.remove();
+    translatorButton = null;
+  }
+
+  const root = ensureShadowRoot();
+
+  translatorButton = document.createElement('button');
+  translatorButton.type = 'button';
+  translatorButton.className = 'llm-trigger-btn';
+  translatorButton.setAttribute('aria-label', 'Translate selected text');
+  translatorButton.setAttribute('title', 'Translate selected text');
+  translatorButton.style.backgroundImage = `url("${chrome.runtime.getURL('icons/icon48.png')}")`;
+
+  // Position the button clamped to viewport
+  const scrollX = window.scrollX || window.pageXOffset || 0;
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const buffer = 5;
+  const btnSize = 32;
+
+  let btnLeft = Math.max(scrollX + buffer, Math.min(position.left, scrollX + window.innerWidth - btnSize - buffer));
+  let btnTop = Math.max(scrollY + buffer, Math.min(position.top, scrollY + window.innerHeight - btnSize - buffer));
+
+  translatorButton.style.top = `${btnTop}px`;
+  translatorButton.style.left = `${btnLeft}px`;
 
   // Prevent mousedown from dropping text selection
-  translatorIcon.addEventListener('mousedown', (e) => {
+  translatorButton.addEventListener('mousedown', (e) => {
     e.preventDefault();
     e.stopPropagation();
   });
 
-  // Handle icon click - trigger translation
-  translatorIcon.addEventListener('click', (e) => {
+  // Handle click & keyboard (Enter/Space on button triggers click)
+  translatorButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -127,85 +310,189 @@ function createTranslatorIcon(position) {
     }
   });
 
-  document.body.appendChild(translatorIcon);
+  root.appendChild(translatorButton);
 }
 
 /**
- * Displays the translation popup with result or error message, clamped to viewport.
+ * Displays the loading popup with a spinner immediately upon translation start.
  */
-function showTranslationPopup(messageText, isError = false) {
+function showLoadingPopup() {
   if (translationPopup) {
     translationPopup.remove();
     translationPopup = null;
   }
 
   translationPopup = document.createElement('div');
-  translationPopup.id = 'translation-popup';
-  translationPopup.style.position = 'absolute';
-  translationPopup.style.padding = '12px';
-  translationPopup.style.backgroundColor = '#ffffff';
-  translationPopup.style.border = '1px solid #cccccc';
-  translationPopup.style.borderRadius = '6px';
-  translationPopup.style.boxShadow = '0 3px 10px rgba(0,0,0,0.3)';
-  translationPopup.style.zIndex = '999999';
-  translationPopup.style.maxWidth = '400px';
-  translationPopup.style.fontSize = '14px';
-  translationPopup.style.lineHeight = '1.5';
-  translationPopup.style.color = isError ? '#cc0000' : '#333333';
-  translationPopup.style.textAlign = 'left';
-  translationPopup.style.fontFamily = 'Arial, sans-serif';
-  translationPopup.textContent = messageText;
+  translationPopup.className = 'llm-popup';
+  translationPopup.setAttribute('role', 'dialog');
+  translationPopup.setAttribute('aria-label', 'Translation Loading');
 
   translationPopup.addEventListener('mousedown', (e) => {
     e.stopPropagation();
   });
 
-  // Temporarily add to DOM to measure dimensions
-  translationPopup.style.visibility = 'hidden';
-  translationPopup.style.top = '-9999px';
-  translationPopup.style.left = '-9999px';
-  document.body.appendChild(translationPopup);
+  const loadingContainer = document.createElement('div');
+  loadingContainer.className = 'llm-loading-container';
 
-  const popupWidth = translationPopup.offsetWidth;
-  const popupHeight = translationPopup.offsetHeight;
+  const loadingBody = document.createElement('div');
+  loadingBody.className = 'llm-loading-body';
 
-  const anchorTop = savedPosition ? savedPosition.top : window.scrollY + 50;
-  const anchorLeft = savedPosition ? savedPosition.left : window.scrollX + 50;
-  const anchorHeight = 32;
+  const spinner = document.createElement('div');
+  spinner.className = 'llm-spinner';
+  spinner.setAttribute('aria-hidden', 'true');
 
-  let desiredTop = anchorTop + anchorHeight + 2;
-  let desiredLeft = anchorLeft;
+  const loadingText = document.createElement('span');
+  loadingText.className = 'llm-loading-text';
+  loadingText.setAttribute('aria-live', 'polite');
+  loadingText.textContent = 'Translating...';
 
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
-  const buffer = 10;
+  loadingBody.appendChild(spinner);
+  loadingBody.appendChild(loadingText);
 
-  // Viewport horizontal clamping
-  if (desiredLeft + popupWidth > scrollX + viewportWidth - buffer) {
-    desiredLeft = scrollX + viewportWidth - popupWidth - buffer;
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'llm-btn';
+  closeBtn.setAttribute('aria-label', 'Close translation');
+  closeBtn.textContent = '✕';
+  closeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    transitionTo(State.IDLE);
+  });
+
+  loadingContainer.appendChild(loadingBody);
+  loadingContainer.appendChild(closeBtn);
+  translationPopup.appendChild(loadingContainer);
+
+  positionElement(translationPopup, savedPosition);
+}
+
+/**
+ * Displays the successful translation popup with text, Copy, and Close buttons.
+ */
+function showSuccessPopup(translationText) {
+  if (translationPopup) {
+    translationPopup.remove();
+    translationPopup = null;
   }
-  if (desiredLeft < scrollX + buffer) {
-    desiredLeft = scrollX + buffer;
+
+  translationPopup = document.createElement('div');
+  translationPopup.className = 'llm-popup';
+  translationPopup.setAttribute('role', 'dialog');
+  translationPopup.setAttribute('aria-label', 'Translation Result');
+
+  translationPopup.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  const contentArea = document.createElement('div');
+  contentArea.className = 'llm-popup-content';
+  contentArea.setAttribute('tabindex', '0');
+
+  const textParagraph = document.createElement('p');
+  textParagraph.className = 'llm-translation-text';
+  textParagraph.textContent = translationText;
+  contentArea.appendChild(textParagraph);
+
+  const footer = document.createElement('div');
+  footer.className = 'llm-popup-footer';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'llm-btn llm-copy-btn';
+  copyBtn.setAttribute('aria-label', 'Copy translation to clipboard');
+  copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    copyToClipboard(translationText, copyBtn);
+  });
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'llm-btn llm-close-btn';
+  closeBtn.setAttribute('aria-label', 'Close translation');
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    transitionTo(State.IDLE);
+  });
+
+  footer.appendChild(copyBtn);
+  footer.appendChild(closeBtn);
+
+  translationPopup.appendChild(contentArea);
+  translationPopup.appendChild(footer);
+
+  positionElement(translationPopup, savedPosition);
+}
+
+/**
+ * Displays the error popup with sanitized message, Retry, and Close buttons.
+ */
+function showErrorPopup(error) {
+  if (translationPopup) {
+    translationPopup.remove();
+    translationPopup = null;
   }
 
-  // Viewport vertical clamping
-  if (desiredTop + popupHeight > scrollY + viewportHeight - buffer) {
-    const topAbove = anchorTop - popupHeight - 2;
-    if (topAbove < scrollY + buffer) {
-      desiredTop = scrollY + viewportHeight - popupHeight - buffer;
-    } else {
-      desiredTop = topAbove;
+  const sanitizedMessage = getSanitizedErrorMessage(error);
+
+  translationPopup = document.createElement('div');
+  translationPopup.className = 'llm-popup';
+  translationPopup.setAttribute('role', 'dialog');
+  translationPopup.setAttribute('aria-label', 'Translation Error');
+
+  translationPopup.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  const contentArea = document.createElement('div');
+  contentArea.className = 'llm-popup-content';
+
+  const errorBox = document.createElement('div');
+  errorBox.className = 'llm-error-box';
+
+  const errorParagraph = document.createElement('p');
+  errorParagraph.textContent = sanitizedMessage;
+  errorBox.appendChild(errorParagraph);
+  contentArea.appendChild(errorBox);
+
+  const footer = document.createElement('div');
+  footer.className = 'llm-popup-footer';
+
+  const retryBtn = document.createElement('button');
+  retryBtn.type = 'button';
+  retryBtn.className = 'llm-btn llm-btn-primary llm-retry-btn';
+  retryBtn.setAttribute('aria-label', 'Retry translation');
+  retryBtn.textContent = 'Retry';
+  retryBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (savedSelectionText) {
+      transitionTo(State.LOADING);
     }
-  }
-  if (desiredTop < scrollY + buffer) {
-    desiredTop = scrollY + buffer;
-  }
+  });
 
-  translationPopup.style.top = `${desiredTop}px`;
-  translationPopup.style.left = `${desiredLeft}px`;
-  translationPopup.style.visibility = 'visible';
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'llm-btn llm-close-btn';
+  closeBtn.setAttribute('aria-label', 'Close translation');
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    transitionTo(State.IDLE);
+  });
+
+  footer.appendChild(retryBtn);
+  footer.appendChild(closeBtn);
+
+  translationPopup.appendChild(contentArea);
+  translationPopup.appendChild(footer);
+
+  positionElement(translationPopup, savedPosition);
 }
 
 /**
@@ -228,7 +515,7 @@ function transitionTo(nextState, payload = {}) {
       savedPosition = payload.position || null;
 
       if (savedPosition) {
-        createTranslatorIcon(savedPosition);
+        createTranslatorButton(savedPosition);
         document.addEventListener('keydown', handleKeyDown);
         setTrackedTimeout(() => {
           document.addEventListener('click', handleDocumentClick);
@@ -238,16 +525,20 @@ function transitionTo(nextState, payload = {}) {
 
     case State.LOADING:
       currentState = State.LOADING;
-      if (translatorIcon) {
-        translatorIcon.remove();
-        translatorIcon = null;
+      if (translatorButton) {
+        translatorButton.remove();
+        translatorButton = null;
       }
+
+      showLoadingPopup();
 
       const requestId = generateRequestId();
       currentRequestId = requestId;
 
       document.addEventListener('keydown', handleKeyDown);
-      document.addEventListener('click', handleDocumentClick);
+      setTrackedTimeout(() => {
+        document.addEventListener('click', handleDocumentClick);
+      }, 0);
 
       chrome.runtime.sendMessage(
         {
@@ -287,7 +578,7 @@ function transitionTo(nextState, payload = {}) {
 
     case State.SUCCESS:
       currentState = State.SUCCESS;
-      showTranslationPopup(payload.translation || '');
+      showSuccessPopup(payload.translation || '');
       document.addEventListener('keydown', handleKeyDown);
       setTrackedTimeout(() => {
         document.addEventListener('click', handleDocumentClick);
@@ -296,8 +587,7 @@ function transitionTo(nextState, payload = {}) {
 
     case State.ERROR:
       currentState = State.ERROR;
-      const errorMessage = payload.error?.message || 'Translation failed.';
-      showTranslationPopup(errorMessage, true);
+      showErrorPopup(payload.error || null);
       document.addEventListener('keydown', handleKeyDown);
       setTrackedTimeout(() => {
         document.addEventListener('click', handleDocumentClick);
@@ -314,11 +604,10 @@ function transitionTo(nextState, payload = {}) {
  * Text selection interception on mouseup.
  */
 document.addEventListener('mouseup', (e) => {
-  // Ignore clicks on existing extension UI elements
-  if (
-    (translatorIcon && translatorIcon.contains(e.target)) ||
-    (translationPopup && translationPopup.contains(e.target))
-  ) {
+  const path = e.composedPath ? e.composedPath() : [];
+
+  // Ignore clicks inside existing extension Shadow DOM or host element
+  if (hostElement && (path.includes(hostElement) || hostElement.contains(e.target))) {
     return;
   }
 
@@ -342,14 +631,14 @@ document.addEventListener('mouseup', (e) => {
     // Accurate position at the end of the last non-empty client rect (multiline support)
     const targetRect = rects.length > 0 ? rects[rects.length - 1] : range.getBoundingClientRect();
 
-    let topPos = window.scrollY + targetRect.top - 24;
+    let topPos = window.scrollY + targetRect.top - 28;
     if (topPos < window.scrollY) {
       topPos = window.scrollY + targetRect.bottom + 4;
     }
 
     const position = {
       top: topPos,
-      left: window.scrollX + targetRect.right + 5
+      left: window.scrollX + targetRect.right + 6
     };
 
     transitionTo(State.SELECTED, { text, position });
