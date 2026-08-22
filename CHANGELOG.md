@@ -9,13 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / In Development]
 
-### Planned (Stage 3): Content Script Lifecycle & State Machine
-- Capture text selection and bounding rects strictly on `mouseup` using `range.getClientRects()`.
-- Implement Finite State Machine (`IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`).
-- Eliminate `preventIconRemoval` flag and state race conditions.
-- Introduce `requestId` to prevent stale response overwrites.
-- Safely handle `chrome.runtime.lastError` and clean up all event listeners and timers on reset.
-
 ### Planned (Stage 4): Encapsulated Translation UI
 - Encapsulate UI and styles within an open Shadow DOM.
 - Replace clickable `div` with accessible `button` (`aria-label`, visible focus, Enter/Space support).
@@ -35,6 +28,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade GitHub Actions runner to Node.js 20 LTS.
 - Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
 - Update packaging scripts for distribution.
+
+---
+
+## [0.4.0] - 2026-08-22
+
+### Added (Stage 3: Content Script Lifecycle & State Machine)
+- Implemented deterministic Finite State Machine (`IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`) in `content.js`.
+- Added `range.getClientRects()` positioning to accurately place the translate trigger at the end of multiline selections.
+- Added asynchronous request correlation using unique `requestId` to prevent stale responses from overwriting newer selections.
+- Added safe `chrome.runtime.lastError` handling to prevent uncaught exceptions when the extension context is reloaded.
+- Implemented centralized `cleanup()` routine managing DOM elements, active timers, and global listeners.
+
+### Fixed
+- Eliminated `preventIconRemoval` flag and selection race conditions.
+- Fixed selection loss on button click by capturing selected text on `mouseup` rather than in the click handler.
 
 ---
 

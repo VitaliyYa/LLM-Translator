@@ -110,15 +110,15 @@ Verification:
 
 ---
 
-### Stage 3. Fix Content Script State Machine & Selection Lifecycle
+### Stage 3. Fix Content Script State Machine & Selection Lifecycle (Completed)
 
-- Capture selection text and bounding coordinates strictly at the moment of the `mouseup` event (never read `window.getSelection()` inside the click handler).
-- Implement a deterministic Finite State Machine: `IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`.
-- Completely remove the `preventIconRemoval` flag and resolve all event race conditions.
-- Generate a unique `requestId` per request; ignore stale responses from rapid sequential selections.
-- Add safe handling of `chrome.runtime.lastError` to prevent unhandled exceptions upon extension updates.
-- Implement centralized `cleanup()` method: remove global document listeners (outside clicks, Escape) and clear pending `setTimeout` timers.
-- Use the last non-empty client rectangle (`range.getClientRects()`) to accurately position the button at the end of multiline selections.
+- [x] Capture selection text and bounding coordinates strictly at the moment of the `mouseup` event (never read `window.getSelection()` inside the click handler).
+- [x] Implement a deterministic Finite State Machine: `IDLE`, `SELECTED`, `LOADING`, `SUCCESS`, `ERROR`.
+- [x] Completely remove the `preventIconRemoval` flag and resolve all event race conditions.
+- [x] Generate a unique `requestId` per request; ignore stale responses from rapid sequential selections.
+- [x] Add safe handling of `chrome.runtime.lastError` to prevent unhandled exceptions upon extension updates.
+- [x] Implement centralized `cleanup()` method: remove global document listeners (outside clicks, Escape) and clear pending `setTimeout` timers.
+- [x] Use the last non-empty client rectangle (`range.getClientRects()`) to accurately position the button at the end of multiline selections.
 
 Browser verification:
 
