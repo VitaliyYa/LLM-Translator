@@ -170,15 +170,16 @@ Browser verification:
 
 ---
 
-### Stage 6. Firefox Compatibility, CI/CD Automation & Documentation
+### Stage 6. Firefox Compatibility, CI/CD Automation & Documentation (Completed)
 
-- Verify WebExtension API compatibility and behavior in current Firefox versions.
-- Standardize Firefox manifest (`manifest.firefox.json`) with aligned permissions (MV3 where supported or scoped MV2).
-- Upgrade GitHub Actions CI runner (`.github/workflows/build-extensions.yml`) to Node.js 20 LTS.
-- Add CI workflow steps for JavaScript syntax checking (`node --check`) and automated unit testing (`node --test`).
-- Update packaging scripts ([prepare_firefox.bat](prepare_firefox.bat) and CI workflow) to include all newly modularized files (`gemini.js`, `content.css`, `options.css`).
-- Add options validation tests in `tests/options.test.js`.
-- Update [README.md](README.md) with comprehensive installation, setup, model configuration, and troubleshooting instructions.
+- [x] Verify WebExtension API compatibility and behavior in current Firefox versions.
+- [x] Standardize Firefox manifest (`manifest.firefox.json`) to Manifest V3 (MV3) with ES module event-page background support.
+- [x] Standardize manifest descriptions to English in `manifest.json` and `manifest.firefox.json`.
+- [x] Upgrade GitHub Actions CI runner (`.github/workflows/build-extensions.yml`) to Node.js 24 LTS and Actions v4 (`checkout@v4`, `setup-node@v4`, `upload-artifact@v4`).
+- [x] Add CI workflow steps for JavaScript syntax checking (`node --check`) and automated unit testing (`node --test tests/*.test.js`).
+- [x] Update packaging configuration in CI workflow to include all modularized files (`gemini.js`, `content.css`, `options.css`) and remove obsolete `prepare_firefox.bat`.
+- [x] Add options validation and status message tests in `tests/options.test.js`.
+- [x] Update `README.md` with comprehensive installation, setup, model configuration, and troubleshooting instructions.
 
 Completion criterion: Translation flow functions identically in Chrome and Firefox; automated tests and builds pass in GitHub Actions; documentation is complete.
 

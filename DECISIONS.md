@@ -107,3 +107,20 @@ This document records the architectural decisions, context, rationale, and conse
   Eliminates race conditions during rapid re-selection.
 * **Consequences:**
   Ensures completely deterministic UI behavior.
+
+---
+
+## ADR-008: Manifest V3 for Mozilla Firefox and CI/CD Automation
+
+* **Status:** Accepted (Stage 6)
+* **Context:**
+  Firefox previously used Manifest V2 with obsolete permission declarations (`activeTab`, `<all_urls>` in `permissions`, `browser_action`) and manual batch scripts (`prepare_firefox.bat`). Modern Firefox (109+, 115+ ESR) fully supports Manifest V3 with modular background scripts (`type: "module"`).
+* **Decision:**
+  1. Migrate `manifest.firefox.json` to Manifest V3 (`manifest_version: 3`), declaring `"background": { "scripts": ["background.js"], "type": "module" }`, scoped `permissions: ["storage"]`, and `host_permissions: ["https://generativelanguage.googleapis.com/*"]`.
+  2. Standardize CI/CD automation in GitHub Actions with Node.js 24 LTS, `actions/checkout@v4`, `actions/setup-node@v4`, automated syntax verification (`node --check`), unit tests (`node --test 'tests/*.test.js'`), and artifact bundling (`options.css` included) for both Chrome and Firefox.
+  3. Retire `prepare_firefox.bat` in favor of CI artifacts and direct source loading in developer mode.
+* **Rationale:**
+  1. Firefox Manifest V3 aligns permission models between Chrome and Firefox while allowing native ES module imports in background event pages without bundlers.
+  2. CI automation on Node.js 24 LTS ensures consistent cross-platform validation and reproducible release zip packages.
+* **Consequences:**
+  Cross-browser codebase remains 100% vanilla JavaScript with zero build steps or bundlers, while package distribution is fully automated via CI.
