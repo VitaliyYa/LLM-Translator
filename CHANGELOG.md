@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased / In Development]
+## [0.7.0] - 2026-08-22
 
-### Planned (Stage 6): Firefox Compatibility & CI/CD
-- Validate WebExtension APIs in modern Firefox.
-- Upgrade GitHub Actions runner to Node.js 20 LTS.
-- Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
-- Update packaging scripts for distribution.
+### Added (Stage 6: Firefox Compatibility, CI/CD Automation & Documentation)
+- Upgraded Mozilla Firefox extension support to Manifest V3 (`manifest_version: 3`) with native ES module background event-page architecture.
+- Added GitHub Actions continuous integration pipeline running on Node.js 24 LTS with automated syntax checks, unit tests, and cross-browser zip artifact packaging (`chrome-extension.zip`, `firefox-extension.zip`).
+- Standardized extension metadata descriptions in English across all platform manifests.
+- Added comprehensive developer and user documentation in `README.md`.
 
 ---
 

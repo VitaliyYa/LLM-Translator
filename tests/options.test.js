@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { validateSettings } from '../options.js';
+import {
+  validateSettings,
+  showStatusMessage,
+  hideStatusMessage
+} from '../options.js';
 
 test('validateSettings succeeds for valid options payload', () => {
   const result = validateSettings({
@@ -101,4 +105,24 @@ test('validateSettings fails when apiKey is empty or missing', () => {
 
   assert.equal(undefinedKey.valid, false);
   assert.equal(undefinedKey.field, 'apiKey');
+});
+
+test('showStatusMessage and hideStatusMessage update element properties', () => {
+  const mockEl = { textContent: '', className: '' };
+
+  showStatusMessage(mockEl, 'Test message', 'success');
+  assert.equal(mockEl.textContent, 'Test message');
+  assert.equal(mockEl.className, 'status-message visible success');
+
+  showStatusMessage(mockEl, 'Error occurred', 'error');
+  assert.equal(mockEl.textContent, 'Error occurred');
+  assert.equal(mockEl.className, 'status-message visible error');
+
+  hideStatusMessage(mockEl);
+  assert.equal(mockEl.textContent, '');
+  assert.equal(mockEl.className, 'status-message');
+
+  // Should gracefully handle null/undefined element
+  assert.doesNotThrow(() => showStatusMessage(null, 'No crash'));
+  assert.doesNotThrow(() => hideStatusMessage(null));
 });

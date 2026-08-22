@@ -1,15 +1,17 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "LLM Translator",
   "version": "1.0",
-  "description": "Переводит выделенный текст с использованием LLM API.",
+  "description": "Translate selected text using Google Gemini API.",
   "permissions": [
-    "storage",
-    "activeTab",
-    "<all_urls>"
+    "storage"
+  ],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -18,14 +20,16 @@
     }
   ],
   "web_accessible_resources": [
-    "icons/*",
-    "content.css"
+    {
+      "resources": ["icons/*", "content.css"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "browser_action": {
+  "action": {
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -35,7 +39,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "llm-translator@example.com",
-      "strict_min_version": "57.0"
+      "strict_min_version": "115.0"
     }
   }
 }

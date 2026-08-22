@@ -3,50 +3,62 @@ name: Build Browser Extensions
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
-      
+          node-version: '24'
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check background.js
+          node --check content.js
+          node --check gemini.js
+          node --check options.js
+
+      - name: Run automated unit tests
+        run: node --test tests/*.test.js
+
       - name: Create build directory
         run: mkdir -p build
-      
+
       # Build Chrome Extension
       - name: Create Chrome Extension package
         run: |
           mkdir -p build/chrome
-          cp background.js gemini.js content.js content.css options.html options.js manifest.json build/chrome/
+          cp background.js gemini.js content.js content.css options.html options.js options.css manifest.json build/chrome/
           cp -r icons build/chrome/
           cd build/chrome
           zip -r ../chrome-extension.zip *
-      
+
       # Build Firefox Extension
       - name: Create Firefox Extension package
         run: |
           mkdir -p build/firefox
-          cp background.js gemini.js content.js content.css options.html options.js build/firefox/
+          cp background.js gemini.js content.js content.css options.html options.js options.css build/firefox/
           cp -r icons build/firefox/
           cp manifest.firefox.json build/firefox/manifest.json
           cd build/firefox
           zip -r ../firefox-extension.zip *
-      
+
       # Upload artifacts
       - name: Upload Chrome Extension
         uses: actions/upload-artifact@v4
         with:
           name: chrome-extension
           path: build/chrome-extension.zip
-      
+
       - name: Upload Firefox Extension
         uses: actions/upload-artifact@v4
         with:

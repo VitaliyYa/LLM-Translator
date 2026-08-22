@@ -126,8 +126,7 @@ Before creating **every** commit:
 ├── options.html             # Extension settings page
 ├── options.js               # Extension settings logic
 ├── options.css              # Extension settings styles
-├── prepare_firefox.bat      # Firefox build script (Windows)
-├── .github/workflows/       # CI/CD automation (Node 20, syntax check and test runner)
+├── .github/workflows/       # CI/CD automation (Node 24, syntax check, test runner, package builder)
 ├── tests/                   # Automated tests (node:test)
 │   ├── gemini.test.js       # Unit tests for Gemini requests, responses, and error handling
 │   └── options.test.js      # Unit tests for settings field validation
@@ -226,7 +225,7 @@ Before creating **every** commit:
 - Popup positioning must be clamped within the viewport across all 4 edges with scroll offset calculations (`window.innerWidth`, `window.innerHeight`, `window.scrollX`, `window.scrollY`).
 
 ### Rule 4: Build & Packaging Scripts
-When creating or renaming files (e.g. `gemini.js`, `content.css`, `options.css`), **always** update packaging scripts in `prepare_firefox.bat` and `.github/workflows/build-extensions.yml`.
+When creating or renaming files (e.g. `gemini.js`, `content.css`, `options.css`), **always** update packaging configurations in `.github/workflows/build-extensions.yml`.
 
 ---
 
@@ -253,7 +252,7 @@ node --check gemini.js
 node --check options.js
 
 # 2. Run full test suite
-node --test tests/
+node --test 'tests/*.test.js'
 
 # 3. Verify clean git status
 git status

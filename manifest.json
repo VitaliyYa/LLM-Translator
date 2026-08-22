@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "LLM Translator",
     "version": "1.0",
-    "description": "Переводит выделенный текст с использованием LLM API.",
+    "description": "Translate selected text using Google Gemini API.",
     "permissions": [
       "storage"
     ],

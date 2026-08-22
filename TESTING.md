@@ -14,9 +14,11 @@ node --check background.js
 node --check content.js
 node --check gemini.js
 node --check options.js
+node --check tests/gemini.test.js
+node --check tests/options.test.js
 
-# 2. Run unit tests (Node.js 18+)
-node --test tests/gemini.test.js
+# 2. Run unit tests (Node.js 20+)
+node --test 'tests/*.test.js'
 ```
 
 Expected result: All tests pass with status `pass`, 0 errors.
@@ -30,10 +32,10 @@ Expected result: All tests pass with status `pass`, 0 errors.
    - Navigate to `chrome://extensions`.
    - Enable **Developer mode** in the top-right corner.
    - Click **Load unpacked** and select the repository root directory.
-3. **Install in Mozilla Firefox:**
+3. **Install in Mozilla Firefox (Manifest V3):**
    - Navigate to `about:debugging#/runtime/this-firefox`.
    - Click **Load Temporary Add-on...**.
-   - Select the manifest file (`manifest.json` or `firefox_build/manifest.json`).
+   - Select the `manifest.firefox.json` file (or `manifest.json` inside the extracted `firefox-extension.zip` artifact built by CI).
 
 ---
 
