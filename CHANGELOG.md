@@ -9,17 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / In Development]
 
-### Planned (Stage 5): Options Page Polish
-- Mask API key field (`type="password"`) with a show/hide toggle.
-- Add "Test Connection" button with a lightweight verification ping.
-- Add accessible status announcements via `aria-live="polite"`.
-- Provide direct link and guide for Google AI Studio API key generation.
-
 ### Planned (Stage 6): Firefox Compatibility & CI/CD
 - Validate WebExtension APIs in modern Firefox.
 - Upgrade GitHub Actions runner to Node.js 20 LTS.
 - Add automated syntax checking (`node --check`) and test running (`node --test`) in CI.
 - Update packaging scripts for distribution.
+
+---
+
+## [0.6.0] - 2026-08-22
+
+### Added (Stage 5: Polish Extension Options Page)
+- Redesigned options page with a responsive card layout and light/dark theme support matching the browser color scheme (`options.css`).
+- Masked API key field with `type="password"` by default and added an accessible show/hide password toggle button with ARIA attributes.
+- Added client-side form validation for required fields (`targetLanguage`, `apiKey`) and valid Gemini model name characters (`/^[a-zA-Z0-9._-]+$/`).
+- Added "Test Connection" button providing an instant verification ping to the Gemini API via background service worker.
+- Added granular error feedback distinguishing between authentication failure (invalid key), unavailable/missing model (404), network disconnects, and rate limits.
+- Added accessible status notification region with `role="status"` and `aria-live="polite"`.
+- Added guide card with direct link to Google AI Studio for acquiring an API key.
 
 ---
 

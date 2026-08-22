@@ -242,6 +242,13 @@ export function normalizeGeminiError(error, responseStatus) {
     };
   }
 
+  if (responseStatus === 404) {
+    return {
+      code: 'BAD_RESPONSE',
+      message: 'Requested Gemini model was not found or is unavailable.'
+    };
+  }
+
   if (responseStatus === 429) {
     return {
       code: 'RATE_LIMIT',

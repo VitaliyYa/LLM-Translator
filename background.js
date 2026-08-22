@@ -49,6 +49,40 @@ async function getSettings() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'connection.test') {
+    (async () => {
+      try {
+        const apiKey = (message.apiKey || '').trim();
+        const model = (message.model || '').trim() || DEFAULT_GEMINI_MODEL;
+        const targetLanguage = (message.targetLanguage || '').trim() || 'English';
+
+        if (!apiKey) {
+          const normalized = normalizeGeminiError({
+            code: 'SETTINGS_MISSING',
+            message: 'API key is required.'
+          });
+          sendResponse({ ok: false, error: normalized });
+          return;
+        }
+
+        await translateWithGemini({
+          apiKey,
+          model,
+          targetLanguage,
+          text: 'Ping'
+        });
+
+        sendResponse({ ok: true });
+      } catch (err) {
+        console.error('LLM-Translator [Background]: Connection test failed');
+        const normalized = normalizeGeminiError(err);
+        sendResponse({ ok: false, error: normalized });
+      }
+    })();
+
+    return true;
+  }
+
   if (message.type === 'translation.request' || message.type === 'translateText') {
     const isLegacy = message.type === 'translateText';
     const requestId = message.requestId || null;

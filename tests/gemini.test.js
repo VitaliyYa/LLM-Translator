@@ -212,6 +212,8 @@ test('normalizeGeminiError handles pre-coded errors and HTTP statuses', () => {
   assert.equal(normalizeGeminiError(new Error(), 400).code, 'AUTH');
   assert.equal(normalizeGeminiError(new Error(), 401).code, 'AUTH');
   assert.equal(normalizeGeminiError(new Error(), 403).code, 'AUTH');
+  assert.equal(normalizeGeminiError(new Error(), 404).code, 'BAD_RESPONSE');
+  assert.equal(normalizeGeminiError(new Error(), 404).message, 'Requested Gemini model was not found or is unavailable.');
   assert.equal(normalizeGeminiError(new Error(), 429).code, 'RATE_LIMIT');
   assert.equal(normalizeGeminiError(new Error(), 500).code, 'BAD_RESPONSE');
   assert.equal(normalizeGeminiError(new Error(), 503).code, 'BAD_RESPONSE');

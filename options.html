@@ -2,32 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LLM Translator Settings</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    label { display: block; margin: 10px 0 5px; }
-    input[type="text"] { width: 100%; padding: 5px; box-sizing: border-box; }
-    button { margin-top: 15px; padding: 10px 15px; }
-    .status { margin-top: 10px; color: green; }
-    .error { margin-top: 10px; color: red; }
-  </style>
+  <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <h1>LLM Translator Settings</h1>
-  <form id="settings-form">
-    <label for="targetLanguage">Target Language:</label>
-    <input type="text" id="targetLanguage" name="targetLanguage" placeholder="For example, Russian" required>
-    
-    <label for="model">Gemini Model:</label>
-    <input type="text" id="model" name="model" value="gemini-3.5-flash-lite" required>
-    
-    <label for="apiKey">API Key:</label>
-    <input type="text" id="apiKey" name="apiKey" placeholder="Your API Key" required>
-    
-    <button type="submit">Save Settings</button>
-  </form>
-  <div id="message"></div>
-  
-  <script src="options.js"></script>
+  <main class="options-container">
+    <header class="options-header">
+      <img src="icons/icon48.png" alt="LLM Translator Logo" class="options-icon">
+      <div class="options-title-group">
+        <h1>LLM Translator Settings</h1>
+        <p class="options-subtitle">Configure target language and Google Gemini credentials</p>
+      </div>
+    </header>
+
+    <section class="info-card" aria-label="API Key Guide">
+      <strong>Need a Gemini API key?</strong> Get a free key at
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+      Your key is stored strictly on your local device in <code>chrome.storage.local</code>.
+    </section>
+
+    <form id="settings-form" novalidate>
+      <div class="form-group">
+        <label for="targetLanguage" class="form-label">
+          Target Language <span class="required-indicator" aria-hidden="true">*</span>
+        </label>
+        <input
+          type="text"
+          id="targetLanguage"
+          name="targetLanguage"
+          class="form-input"
+          placeholder="e.g. Russian, Spanish, German"
+          required
+        >
+        <p class="form-help">The language selected text will be translated into.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="model" class="form-label">
+          Gemini Model <span class="required-indicator" aria-hidden="true">*</span>
+        </label>
+        <input
+          type="text"
+          id="model"
+          name="model"
+          class="form-input"
+          value="gemini-3.5-flash-lite"
+          placeholder="gemini-3.5-flash-lite"
+          required
+        >
+        <p class="form-help">Default recommended model: <code>gemini-3.5-flash-lite</code>.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="apiKey" class="form-label">
+          API Key <span class="required-indicator" aria-hidden="true">*</span>
+        </label>
+        <div class="input-with-button">
+          <input
+            type="password"
+            id="apiKey"
+            name="apiKey"
+            class="form-input"
+            placeholder="AIzaSy..."
+            required
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button
+            type="button"
+            id="toggle-api-key"
+            class="password-toggle-btn"
+            aria-label="Show API key"
+            title="Show API key"
+            aria-controls="apiKey"
+          >👁</button>
+        </div>
+        <p class="form-help">Your Google AI Studio API key (masked for security).</p>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" id="save-btn" class="btn btn-primary">Save Settings</button>
+        <button type="button" id="test-connection-btn" class="btn btn-secondary">Test Connection</button>
+      </div>
+    </form>
+
+    <div
+      id="status-message"
+      class="status-message"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+  </main>
+
+  <script type="module" src="options.js"></script>
 </body>
 </html>
