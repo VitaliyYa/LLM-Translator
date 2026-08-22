@@ -2,6 +2,17 @@
 
 This document describes the rules, architecture, technology stack, and conventions for AI assistants and human developers working on the **LLM-Translator** repository.
 
+### Mandatory Workflow Protocol
+#### At the beginning of EVERY session:
+Read AGENTS.md (this file), IMPLEMENTATION_PLAN.md, and CHANGELOG.md.
+If the task involves testing — read TESTING.md.
+
+#### Before considering a task complete:
+- Update IMPLEMENTATION_PLAN.md — check off completed steps and record the actual state (not what was planned, but what was actually done).
+- Add an entry to CHANGELOG.md following the Keep a Changelog format.
+- If functionality affecting the test checklist was changed — update TESTING.md.
+- Do not consider a task complete until the documentation is synchronized with the code.
+- If the plan (IMPLEMENTATION_PLAN.md) diverges from the actual state of the codebase — explicitly report this before continuing, rather than silently adjusting one to match the other.
 ---
 
 ## 1. Project Overview & Architectural Principles
