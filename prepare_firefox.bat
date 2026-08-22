@@ -4,6 +4,7 @@ mkdir firefox_build 2>nul
 
 echo Копирование файлов в директорию для Firefox...
 xcopy /y background.js firefox_build\
+xcopy /y gemini.js firefox_build\
 xcopy /y content.js firefox_build\
 xcopy /y options.html firefox_build\
 xcopy /y options.js firefox_build\
