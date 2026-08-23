@@ -124,3 +124,22 @@ This document records the architectural decisions, context, rationale, and conse
   2. CI automation on Node.js 24 LTS ensures consistent cross-platform validation and reproducible release zip packages.
 * **Consequences:**
   Cross-browser codebase remains 100% vanilla JavaScript with zero build steps or bundlers, while package distribution is fully automated via CI.
+
+---
+
+## ADR-009: Pluggable OpenAI-Compatible Provider & Independent Storage
+
+* **Status:** Accepted (Stage 7)
+* **Context:**
+  Users requested the ability to use third-party or self-hosted LLM endpoints (e.g. OpenRouter, OpenAI, local Ollama or LM Studio) instead of or in addition to Google Gemini API.
+* **Decision:**
+  1. Introduce a dedicated, pure ES module `openai.js` providing request formatting, response parsing, markdown stripping, error normalization, and I/O translation with `AbortSignal` timeouts.
+  2. Expand `host_permissions` in `manifest.json` and `manifest.firefox.json` to `["<all_urls>"]` to enable requests to arbitrary user-specified API endpoints.
+  3. Store credentials and configurations for each provider independently in `chrome.storage.local` (`provider`, `apiKey`, `model`, `customEndpoint`, `customModel`, `customApiKey`). Switching providers on the options page preserves credentials without overwriting.
+  4. The messaging protocol between `content.js` and `background.js` remains unchanged, keeping the UI completely provider-agnostic.
+* **Rationale:**
+  1. Enables flexible model selection (e.g. free models on OpenRouter) while preserving Google Gemini as the zero-configuration default.
+  2. Independent storage ensures seamless toggling between providers without retyping API keys or endpoints.
+  3. Pure function architecture in `openai.js` keeps logic 100% testable via Node.js built-in `node:test`.
+* **Consequences:**
+  Options page includes provider selection with dynamic field visibility; CI test runner and build packaging include `openai.js`.

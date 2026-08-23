@@ -185,6 +185,21 @@ Completion criterion: Translation flow functions identically in Chrome and Firef
 
 ---
 
+### Stage 7. OpenAI-Compatible Custom Provider Support (Completed)
+
+- [x] Update `host_permissions` in `manifest.json` and `manifest.firefox.json` to `["<all_urls>"]` for arbitrary user API endpoint access.
+- [x] Extract OpenAI-compatible integration logic into a standalone pure ES module `openai.js` (zero `chrome.*` dependencies) with pure transforms (`normalizeEndpointUrl`, `buildOpenAIRequestBody`, `cleanTranslationOutput`, `parseOpenAIResponse`, `normalizeOpenAIError`) and I/O translation function (`translateWithOpenAI`).
+- [x] Create comprehensive automated test suite `tests/openai.test.js` using `node:test` covering payload schema, URL normalization, markdown code fence stripping, error normalization, and cancellation.
+- [x] Update `background.js` to route `translation.request` and `connection.test` dynamically between Gemini and OpenAI-compatible providers, maintaining separate credentials in `chrome.storage.local`.
+- [x] Redesign `options.html` and `options.css` with a provider selector dropdown, independent configuration panels, and OpenRouter guide.
+- [x] Update `options.js` and `tests/options.test.js` to validate provider-specific settings, provide dynamic panel toggling, and preserve existing credentials upon provider switching.
+- [x] Update CI workflow to check syntax and package `openai.js`.
+- [x] Update `DECISIONS.md` (ADR-009), `TESTING.md`, `CHANGELOG.md` ([0.8.0]), and `README.md`.
+
+Completion criterion: Users can translate via Google Gemini or any OpenAI-compatible provider (e.g. OpenRouter) with independent credentials stored locally and seamless switching.
+
+---
+
 ## 4. Commit Conventions & Development Discipline
 
 Each stage is developed on a dedicated branch with small, focused commits:
@@ -199,8 +214,9 @@ Do not begin the next stage until the current stage has been fully verified in t
 
 ## 5. Final Project Criteria
 
-- Extension translates text exclusively through the Google Gemini API.
-- API key is stored securely in `chrome.storage.local`, never synced, never passed in URLs, and never logged.
+- Extension translates text via Google Gemini API or user-configured OpenAI-compatible providers (e.g. OpenRouter).
+- API keys are stored securely in `chrome.storage.local`, never synced, never passed in URLs, and never logged.
+- Switching between providers preserves configuration and credentials for both services.
 - Network errors, timeouts, and API safety blocks produce user-friendly error codes without uncaught content script exceptions.
 - Text selection, rapid clicking, and window dismissal behave deterministically without race conditions or memory leaks.
 - UI is encapsulated in Shadow DOM, supports keyboard navigation, and automatically adapts to dark mode.
