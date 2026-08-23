@@ -58,9 +58,11 @@ jobs:
         with:
           name: chrome-extension
           path: build/chrome-extension.zip
+          archive: false
 
       - name: Upload Firefox Extension
         uses: actions/upload-artifact@v7
         with:
           name: firefox-extension
           path: build/firefox-extension.zip
+          archive: false
