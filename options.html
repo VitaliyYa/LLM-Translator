@@ -12,15 +12,9 @@
       <img src="icons/icon48.png" alt="LLM Translator Logo" class="options-icon">
       <div class="options-title-group">
         <h1>LLM Translator Settings</h1>
-        <p class="options-subtitle">Configure target language and Google Gemini credentials</p>
+        <p class="options-subtitle">Configure translation provider, target language, and credentials</p>
       </div>
     </header>
-
-    <section class="info-card" aria-label="API Key Guide">
-      <strong>Need a Gemini API key?</strong> Get a free key at
-      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
-      Your key is stored strictly on your local device in <code>chrome.storage.local</code>.
-    </section>
 
     <form id="settings-form" novalidate>
       <div class="form-group">
@@ -39,47 +33,134 @@
       </div>
 
       <div class="form-group">
-        <label for="model" class="form-label">
-          Gemini Model <span class="required-indicator" aria-hidden="true">*</span>
+        <label for="provider" class="form-label">
+          Translation Provider <span class="required-indicator" aria-hidden="true">*</span>
         </label>
-        <input
-          type="text"
-          id="model"
-          name="model"
-          class="form-input"
-          value="gemini-3.5-flash-lite"
-          placeholder="gemini-3.5-flash-lite"
-          required
-        >
-        <p class="form-help">Default recommended model: <code>gemini-3.5-flash-lite</code>.</p>
+        <select id="provider" name="provider" class="form-input form-select">
+          <option value="gemini">Google Gemini (Google AI Studio)</option>
+          <option value="openai_compatible">Custom (OpenAI-compatible / OpenRouter)</option>
+        </select>
+        <p class="form-help">Select the AI service used for translations.</p>
       </div>
 
-      <div class="form-group">
-        <label for="apiKey" class="form-label">
-          API Key <span class="required-indicator" aria-hidden="true">*</span>
-        </label>
-        <div class="input-with-button">
-          <input
-            type="password"
-            id="apiKey"
-            name="apiKey"
-            class="form-input"
-            placeholder="AIzaSy..."
-            required
-            autocomplete="off"
-            spellcheck="false"
-          >
-          <button
-            type="button"
-            id="toggle-api-key"
-            class="password-toggle-btn"
-            aria-label="Show API key"
-            title="Show API key"
-            aria-controls="apiKey"
-          >👁</button>
+      <!-- Google Gemini Section -->
+      <section id="gemini-section" class="provider-section">
+        <div class="info-card" aria-label="Gemini API Key Guide">
+          <strong>Need a Gemini API key?</strong> Get a free key at
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+          Stored locally in <code>chrome.storage.local</code>.
         </div>
-        <p class="form-help">Your Google AI Studio API key (masked for security).</p>
-      </div>
+
+        <div class="form-group">
+          <label for="model" class="form-label">
+            Gemini Model <span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="text"
+            id="model"
+            name="model"
+            class="form-input"
+            value="gemini-3.5-flash-lite"
+            placeholder="gemini-3.5-flash-lite"
+            required
+          >
+          <p class="form-help">Default recommended model: <code>gemini-3.5-flash-lite</code>.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="apiKey" class="form-label">
+            Gemini API Key <span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <div class="input-with-button">
+            <input
+              type="password"
+              id="apiKey"
+              name="apiKey"
+              class="form-input"
+              placeholder="AIzaSy..."
+              required
+              autocomplete="off"
+              spellcheck="false"
+            >
+            <button
+              type="button"
+              id="toggle-api-key"
+              class="password-toggle-btn"
+              aria-label="Show API key"
+              title="Show API key"
+              aria-controls="apiKey"
+            >👁</button>
+          </div>
+          <p class="form-help">Your Google AI Studio API key (masked for security).</p>
+        </div>
+      </section>
+
+      <!-- Custom OpenAI-compatible Section -->
+      <section id="openai-section" class="provider-section hidden">
+        <div class="info-card" aria-label="OpenRouter Guide">
+          <strong>Using OpenRouter or a custom model?</strong> Get an API key at
+          <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter</a>
+          or connect to any OpenAI-compatible API endpoint.
+        </div>
+
+        <div class="form-group">
+          <label for="customEndpoint" class="form-label">
+            API Endpoint URL <span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="url"
+            id="customEndpoint"
+            name="customEndpoint"
+            class="form-input"
+            value="https://openrouter.ai/api/v1/chat/completions"
+            placeholder="https://openrouter.ai/api/v1/chat/completions"
+            required
+          >
+          <p class="form-help">OpenAI-compatible completions endpoint (e.g. <code>https://openrouter.ai/api/v1/chat/completions</code>).</p>
+        </div>
+
+        <div class="form-group">
+          <label for="customModel" class="form-label">
+            Model Name <span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="text"
+            id="customModel"
+            name="customModel"
+            class="form-input"
+            value="meta-llama/llama-3.3-70b-instruct:free"
+            placeholder="meta-llama/llama-3.3-70b-instruct:free"
+            required
+          >
+          <p class="form-help">Model identifier (e.g. <code>meta-llama/llama-3.3-70b-instruct:free</code> or <code>deepseek/deepseek-chat</code>).</p>
+        </div>
+
+        <div class="form-group">
+          <label for="customApiKey" class="form-label">
+            API Key
+          </label>
+          <div class="input-with-button">
+            <input
+              type="password"
+              id="customApiKey"
+              name="customApiKey"
+              class="form-input"
+              placeholder="sk-or-v1-..."
+              autocomplete="off"
+              spellcheck="false"
+            >
+            <button
+              type="button"
+              id="toggle-custom-api-key"
+              class="password-toggle-btn"
+              aria-label="Show API key"
+              title="Show API key"
+              aria-controls="customApiKey"
+            >👁</button>
+          </div>
+          <p class="form-help">Your provider API key (masked). Can be left empty for local Ollama / LM Studio instances.</p>
+        </div>
+      </section>
 
       <div class="form-actions">
         <button type="submit" id="save-btn" class="btn btn-primary">Save Settings</button>
