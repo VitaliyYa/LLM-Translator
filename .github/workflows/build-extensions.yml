@@ -25,6 +25,7 @@ jobs:
           node --check background.js
           node --check content.js
           node --check gemini.js
+          node --check openai.js
           node --check options.js
 
       - name: Run automated unit tests
@@ -37,7 +38,7 @@ jobs:
       - name: Create Chrome Extension package
         run: |
           mkdir -p build/chrome
-          cp background.js gemini.js content.js content.css options.html options.js options.css manifest.json build/chrome/
+          cp background.js gemini.js openai.js content.js content.css options.html options.js options.css manifest.json build/chrome/
           cp -r icons build/chrome/
           cd build/chrome
           zip -r ../chrome-extension.zip *
@@ -46,7 +47,7 @@ jobs:
       - name: Create Firefox Extension package
         run: |
           mkdir -p build/firefox
-          cp background.js gemini.js content.js content.css options.html options.js options.css build/firefox/
+          cp background.js gemini.js openai.js content.js content.css options.html options.js options.css build/firefox/
           cp -r icons build/firefox/
           cp manifest.firefox.json build/firefox/manifest.json
           cd build/firefox

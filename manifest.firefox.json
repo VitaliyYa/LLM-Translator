@@ -2,12 +2,12 @@
   "manifest_version": 3,
   "name": "LLM Translator",
   "version": "1.0",
-  "description": "Translate selected text using Google Gemini API.",
+  "description": "Translate selected text using Google Gemini or OpenAI-compatible APIs.",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "https://generativelanguage.googleapis.com/*"
+    "<all_urls>"
   ],
   "background": {
     "scripts": ["background.js"],
