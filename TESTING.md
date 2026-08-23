@@ -13,8 +13,10 @@ Before proceeding with manual testing, ensure all automated checks pass:
 node --check background.js
 node --check content.js
 node --check gemini.js
+node --check openai.js
 node --check options.js
 node --check tests/gemini.test.js
+node --check tests/openai.test.js
 node --check tests/options.test.js
 
 # 2. Run unit tests (Node.js 20+)
@@ -27,7 +29,9 @@ Expected result: All tests pass with status `pass`, 0 errors.
 
 ## 2. Manual Testing Setup
 
-1. **Obtain API Key:** Create a free API key at [Google AI Studio](https://aistudio.google.com/).
+1. **Obtain API Keys (Optional/Choice):**
+   - Google Gemini: Create a free API key at [Google AI Studio](https://aistudio.google.com/).
+   - OpenRouter / Custom: Create an API key at [OpenRouter](https://openrouter.ai/keys) or use a local LLM server (e.g. Ollama).
 2. **Install in Google Chrome / Chromium:**
    - Navigate to `chrome://extensions`.
    - Enable **Developer mode** in the top-right corner.
@@ -41,19 +45,27 @@ Expected result: All tests pass with status `pass`, 0 errors.
 
 ## 3. Manual Test Scenarios
 
-### Scenario 1: Options Page & Storage
+### Scenario 1: Options Page, Dual Providers & Storage
 - [ ] **Open Options:** Right-click the extension icon in the browser toolbar -> select *Options*.
-- [ ] **Key Masking:** The API key input is masked by default (`type="password"`). Clicking the eye toggle reveals/hides the key.
-- [ ] **Valid Configuration Save:** Fill in target language (`Russian`), model (`gemini-3.5-flash-lite`), and API key (`AIza...`). Click *Save Settings*. The status message "Settings saved!" appears.
+- [ ] **Default Provider:** The provider dropdown defaults to `Google Gemini (Google AI Studio)`.
+- [ ] **Switching Providers:**
+  - Select `Custom (OpenAI-compatible / OpenRouter)` -> Gemini fields hide, and custom endpoint/model/key fields appear.
+  - Select `Google Gemini` -> Gemini fields re-appear.
+- [ ] **Independent Credential Persistence:**
+  - Set Gemini key (`AIza...`) -> switch to Custom provider -> set OpenRouter key (`sk-or-v1-...`) and endpoint.
+  - Click *Save Settings*.
+  - Switch back and forth between providers -> both keys and configurations remain intact and are not erased or overwritten.
+- [ ] **Key Masking:** The API key inputs are masked by default (`type="password"`). Clicking the eye toggle reveals/hides the respective key.
 - [ ] **Input Validation:**
-  - Clear language or key field -> click save -> form blocks submission with required field warning.
-  - Enter invalid model name with forbidden characters (`gemini@#$$%`) -> validation error message appears.
+  - Clear language -> click save -> form blocks submission with required field warning.
+  - Custom provider: enter invalid URL -> validation error appears.
+  - Gemini provider: enter invalid model name (`gemini@#$$%`) -> validation error message appears.
 - [ ] **"Test Connection" Button:**
-  - With valid key: status shows "Connection successful!".
-  - With invalid key: status shows "Authentication error (check your API key)".
-  - When offline: status shows "Network error (check your internet connection)".
+  - With valid key: status shows "Connection successful! [Provider] API is configured and operational.".
+  - With invalid key / URL: status displays specific error description.
+  - When offline: status shows network connection error.
 - [ ] **Persistence in `chrome.storage.local`:** Reload the extension in `chrome://extensions`. Open options again — saved values persist correctly.
-- [ ] **Zero Log Leakage:** Open DevTools on the options page (`F12`), check Console tab and URL bar — the API key is never printed in plain text.
+- [ ] **Zero Log Leakage:** Open DevTools on the options page (`F12`), check Console tab and URL bar — API keys are never printed in plain text.
 
 ---
 

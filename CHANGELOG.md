@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.0] - 2026-08-23
+
+### Added (Stage 7: OpenAI-Compatible Custom Provider Support)
+- Added support for custom OpenAI-compatible API providers (e.g. OpenRouter, local Ollama, LM Studio, vLLM, OpenAI).
+- Added provider switcher to options page with dynamic display of provider-specific configuration panels.
+- Added independent storage in `chrome.storage.local` for Gemini and Custom provider credentials, preserving keys across provider switches.
+- Added pure ES module `openai.js` for OpenAI-compatible completions with response parsing, markdown stripping, and error normalization.
+- Added automated unit test suite `tests/openai.test.js` and updated options validation tests in `tests/options.test.js`.
+- Expanded `host_permissions` in Chrome and Firefox manifests to `["<all_urls>"]` to enable arbitrary user API endpoint access.
+
+---
+
 ## [0.7.0] - 2026-08-22
 
 ### Added (Stage 6: Firefox Compatibility, CI/CD Automation & Documentation)

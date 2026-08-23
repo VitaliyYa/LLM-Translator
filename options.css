@@ -188,9 +188,21 @@ body {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.form-select {
+  cursor: pointer;
+}
+
 .form-input:focus-visible {
   border-color: var(--llm-primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.provider-section {
+  display: block;
+}
+
+.provider-section.hidden {
+  display: none;
 }
 
 /* Input with toggle button */

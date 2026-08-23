@@ -1,6 +1,6 @@
-# LLM Translator — Browser Extension for Gemini API Translation
+# LLM Translator — Browser Extension for AI Translation
 
-A lightweight, fast, and privacy-conscious browser extension for translating selected text on web pages using the Google Gemini API.
+A lightweight, fast, and privacy-conscious browser extension for translating selected text on web pages using the Google Gemini API or custom OpenAI-compatible providers (such as OpenRouter).
 
 Built with clean Vanilla JavaScript without heavy frameworks, transpilers, or build tools, with native Manifest V3 support for Chromium-based browsers (Google Chrome, Microsoft Edge, Brave, etc.) and Mozilla Firefox.
 
@@ -9,7 +9,10 @@ Built with clean Vanilla JavaScript without heavy frameworks, transpilers, or bu
 ## ✨ Features
 
 * 🚀 **Instant Selection Translation:** Select any text on a webpage and click the floating translate icon.
-* 🤖 **Powered by Google Gemini:** Uses `gemini-3.5-flash-lite` with structured output for fast, high-quality translations.
+* 🤖 **Multi-Provider AI Support:**
+  * **Google Gemini:** Direct integration with `gemini-3.5-flash-lite` via Google AI Studio.
+  * **Custom / OpenAI-Compatible:** Connect to OpenRouter, self-hosted models (Ollama, LM Studio, vLLM), or official OpenAI endpoints.
+* 🔄 **Independent Credential Storage:** Seamlessly toggle between Google Gemini and OpenRouter without re-entering credentials.
 * 🛡️ **Privacy & Security First:**
   * API keys are stored strictly on your local machine via `chrome.storage.local`.
   * Keys are never synced across devices, never passed via URL query parameters, and never logged.
@@ -21,14 +24,20 @@ Built with clean Vanilla JavaScript without heavy frameworks, transpilers, or bu
 
 ---
 
-## 🔑 Obtaining a Gemini API Key
+## 🔑 Obtaining API Credentials
 
-A free Gemini API key is required to use the extension:
-
+### Google Gemini (Free Tier)
 1. Visit [Google AI Studio](https://aistudio.google.com/).
 2. Sign in with your Google account.
 3. Click **Get API key** and create a new key.
-4. Copy the generated key (starts with `AIzaSy...`).
+4. Copy the key (starts with `AIzaSy...`).
+
+### OpenRouter (Free / Custom Models)
+1. Visit [OpenRouter](https://openrouter.ai/).
+2. Create an account or sign in.
+3. Navigate to **Keys** and generate a new key (starts with `sk-or-v1-...`).
+4. In the extension settings, select **Custom (OpenAI-compatible / OpenRouter)**.
+5. Use default endpoint `https://openrouter.ai/api/v1/chat/completions` and your preferred model (e.g. `meta-llama/llama-3.3-70b-instruct:free`).
 
 ---
 
@@ -68,9 +77,9 @@ git clone https://github.com/VitaliyYa/LLM-Translator.git
 1. Right-click the extension icon in your browser toolbar and select **Options** (or click the extension action button).
 2. Configure the settings:
    * **Target Language:** Desired translation language (e.g. `Russian`, `English`, `Spanish`, `German`).
-   * **Gemini Model:** Model identifier (defaults to `gemini-3.5-flash-lite`).
-   * **API Key:** Your key copied from Google AI Studio.
-3. Click **Test Connection** to verify your key and network connectivity.
+   * **Translation Provider:** Choose `Google Gemini` or `Custom (OpenAI-compatible / OpenRouter)`.
+   * **Provider Credentials:** Enter the model name and API key for your chosen provider.
+3. Click **Test Connection** to verify connectivity.
 4. Click **Save Settings**.
 
 ---
@@ -84,14 +93,16 @@ The project relies on standard Web Platform APIs and native ES modules:
 ├── manifest.firefox.json    # Manifest V3 for Mozilla Firefox
 ├── background.js            # Service Worker / Event Page: message routing & storage
 ├── gemini.js                # Browser-independent Gemini API logic (pure transforms + I/O)
+├── openai.js                # Browser-independent OpenAI/OpenRouter logic (pure transforms + I/O)
 ├── content.js               # Content Script: selection interception & UI state machine
 ├── content.css              # Encapsulated styles for Shadow DOM
 ├── options.html             # Extension options page
-├── options.js               # Options validation and connection testing logic
+├── options.js               # Options validation, provider switcher, and connection testing
 ├── options.css              # Options page styles (responsive + dark mode)
 ├── .github/workflows/       # GitHub Actions CI/CD (Node 24 LTS, test & build)
 └── tests/                   # Automated unit test suite (node:test)
-    ├── gemini.test.js       # Request building, response parsing, and error normalization
+    ├── gemini.test.js       # Gemini request building, parsing, and error normalization
+    ├── openai.test.js       # OpenAI/OpenRouter request building, parsing, and error normalization
     └── options.test.js      # Options validation and UI helpers
 ```
 
@@ -106,8 +117,10 @@ The extension runs without installing any third-party npm dependencies. Automate
 node --check background.js
 node --check content.js
 node --check gemini.js
+node --check openai.js
 node --check options.js
 node --check tests/gemini.test.js
+node --check tests/openai.test.js
 node --check tests/options.test.js
 
 # Run full automated unit test suite
@@ -139,4 +152,4 @@ The GitHub Actions workflow (`.github/workflows/build-extensions.yml`):
 ## ⚠️ Limitations
 
 * Text selection inside closed Shadow DOMs, restricted PDF viewers, and form inputs (`<input>`, `<textarea>`) is currently out of scope.
-* Requires an active internet connection to communicate with Google Gemini API.
+* Requires an active internet connection or local model endpoint server.
