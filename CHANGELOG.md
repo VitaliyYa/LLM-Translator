@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.1] - 2026-08-31
+
+### Fixed
+- Fixed floating translate button disappearing upon triple-clicking paragraphs by decoupling document-level click dismissal from `State.SELECTED` and making modal click dismissal selection-aware.
+
+---
+
 ## [0.8.0] - 2026-08-23
 
 ### Added (Stage 7: OpenAI-Compatible Custom Provider Support)
