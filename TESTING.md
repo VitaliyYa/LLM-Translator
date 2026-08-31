@@ -71,6 +71,8 @@ Expected result: All tests pass with status `pass`, 0 errors.
 
 ### Scenario 2: Standard Text Translation
 - [ ] **Icon Trigger:** Select a single sentence on any webpage (e.g. on [Wikipedia](https://en.wikipedia.org/wiki/JavaScript)). The translate icon appears smoothly next to the selection endpoint.
+- [ ] **Double-Click Word Selection:** Double-click a single word on any webpage -> The word is selected and the translate icon appears immediately next to it.
+- [ ] **Triple-Click Paragraph Selection:** Triple-click any paragraph on a webpage -> The full paragraph is selected and the translate icon appears at the end of the paragraph without disappearing.
 - [ ] **Trigger Translation:** Click the translate icon. A loading spinner appears immediately.
 - [ ] **Translation Delivery:** Within 1–2 seconds, the translation popup appears displaying accurate translation in the target language.
 - [ ] **Selection Preservation:** Clicking the translate button does not clear the page selection prematurely, ensuring the correct text is sent.
