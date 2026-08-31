@@ -122,14 +122,18 @@ function handleKeyDown(event) {
 }
 
 /**
- * Handles clicks outside translator UI elements to dismiss them.
+ * Handles clicks outside translator UI elements to dismiss modal popups.
  */
 function handleDocumentClick(event) {
   const path = event.composedPath ? event.composedPath() : [];
   if (hostElement && (path.includes(hostElement) || hostElement.contains(event.target))) {
     return;
   }
-  transitionTo(State.IDLE);
+  const selection = window.getSelection();
+  const text = selection ? selection.toString().trim() : '';
+  if (!text) {
+    transitionTo(State.IDLE);
+  }
 }
 
 /**
@@ -517,9 +521,6 @@ function transitionTo(nextState, payload = {}) {
       if (savedPosition) {
         createTranslatorButton(savedPosition);
         document.addEventListener('keydown', handleKeyDown);
-        setTrackedTimeout(() => {
-          document.addEventListener('click', handleDocumentClick);
-        }, 0);
       }
       break;
 
